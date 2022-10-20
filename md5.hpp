@@ -22,6 +22,7 @@ using Words = std::vector<Word>;
  *      every word becomes 4 bytes.
  *      the bytes with lower address(index) comes from the MSB of word.
  */
+
 // encode bytes into words, requires length of input mod 4 == 0
 Words encode_words(const std::string& s);
 Words encode_words(const Bytes& s);
@@ -33,6 +34,9 @@ Bytes encode_bytes(const char* s);
 
 std::string encode_string(const Words& s);
 std::string encode_string(const Bytes& s);
+// no encode_string(const char* s), pls use constructor of std::string
+
+// no encode_c_string, please use encode_string and std::string::c_str()
 
 // rotate operations
 inline Word l_rotate(Word x, int shift) {
@@ -57,6 +61,7 @@ class Md5BlockHasher {
 
     // perform calculation for one step or a range of steps
     // all end points of range are inclusive
+    // step is 0 index
     void cal_step(int step);
     void cal_range(int from, int to);
     void cal_all();
@@ -78,23 +83,23 @@ class Md5BlockHasher {
 
 // constains utility function to calculate steps
 class StepOf {
-    // a1 = the 1st output of a, which is in step 1
-    int a(int i) { return i * 4 - 3; }
-    int b(int i) { return i * 4; }
-    int c(int i) { return i * 4 - 1; }
-    int d(int i) { return i * 4 - 2; }
+    // a1 = the 1st output of a, which is in step 0
+    int a(int i) { return i * 4 - 4; }
+    int b(int i) { return i * 4 - 1; }
+    int c(int i) { return i * 4 - 2; }
+    int d(int i) { return i * 4 - 3; }
 };
 
-const StepOf stepOf;
+const StepOf step_of;
 
 // the shifting of each step of MD5
-const Word S[64] = {7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22,
-                    5, 9,  14, 20, 5, 9,  14, 20, 5, 9,  14, 20, 5, 9,  14, 20,
-                    4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23,
-                    6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21};
+const Word S[] = {7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22,
+                  5, 9,  14, 20, 5, 9,  14, 20, 5, 9,  14, 20, 5, 9,  14, 20,
+                  4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23,
+                  6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21};
 
 // the constants to add in each step of MD5
-const Word K[64] = {
+const Word K[] = {
     0xd76aa478, 0xe8c7b756, 0x242070db, 0xc1bdceee, 0xf57c0faf, 0x4787c62a,
     0xa8304613, 0xfd469501, 0x698098d8, 0x8b44f7af, 0xffff5bb1, 0x895cd7be,
     0x6b901122, 0xfd987193, 0xa679438e, 0x49b40821, 0xf61e2562, 0xc040b340,
@@ -107,6 +112,7 @@ const Word K[64] = {
     0xffeff47d, 0x85845dd1, 0x6fa87e4f, 0xfe2ce6e0, 0xa3014314, 0x4e0811a1,
     0xf7537e82, 0xbd3af235, 0x2ad7d2bb, 0xeb86d391};
 
+// the initial state/initial vector of MD5
 const Words IV = {
     0x67452301,  // A
     0xefcdab89,  // B
@@ -119,6 +125,40 @@ inline Word F(Word b, Word c, Word d) { return (b & c) | (d & ~b); }
 inline Word G(Word b, Word c, Word d) { return (b & d) | (c & ~d); }
 inline Word H(Word b, Word c, Word d) { return b ^ c ^ d; }
 inline Word I(Word b, Word c, Word d) { return c ^ (b | ~d); }
+
+// compute ((a + K + msg + f(b,c,d)) <<< S) + b, f is one of F/G/H/I
+// first step (which output a1) is step 1, not step 0
+inline Word md5OneStep(int step, Word msg, Word a, Word b, Word c, Word d) {
+    Word f;
+    if (step < 16)
+        f = F(b, c, d);
+    else if (step < 32)
+        f = G(b, c, d);
+    else if (step < 48)
+        f = H(b, c, d);
+    else
+        f = I(b, c, d);
+
+    Word temp = f + a + K[step] + msg;
+
+    return a + l_rotate(temp, S[step]);
+}
+
+// similar to another md5OneStep, but determine which word of message is used
+inline Word md5OneStep(int step, Words msg, Word a, Word b, Word c, Word d) {
+    Word i;
+
+    if (step < 16)
+        i = step;
+    else if (step < 32)
+        i = (5 * step + 1) % 16;
+    else if (step < 48)
+        i = (3 * step + 5) % 16;
+    else
+        i = (7 * step) % 16;
+
+    return md5OneStep(step, msg[i], a, b, c, d);
+}
 
 }  // namespace Md5
 
