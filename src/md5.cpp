@@ -46,7 +46,7 @@ std::string encode_string(const Bytes &bytes) {
 }
 
 Bytes padding(const Bytes &bytes) {
-    uint64_t msg_len = bytes.size() * 8;
+    uint64_t msg_len = bytes.size() * uint64_t(8);
     size_t blocks = (bytes.size() +
                      1 /*1 byte for necessary padding*/ +
                      8 /*8 byte for storing message length*/ +
@@ -57,7 +57,9 @@ Bytes padding(const Bytes &bytes) {
     res.push_back(0x80);
     res.resize(blocks * BLOCK_BYTES, 0x00);
 
+    // the beginning index of the bytes used to store the length of message
     size_t size_beg = res.size() - 8;
+    // little endian encoding the size into 8 bytes
     for (int i = 0; i < 8; ++i) {
         Word shifted = (msg_len >> (i * 8));
         res[size_beg + i] = shifted & 0xFF;

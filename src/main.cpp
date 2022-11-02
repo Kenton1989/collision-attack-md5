@@ -1,6 +1,7 @@
 #include <cstdio>
 
 #include "md5.hpp"
+#include "util.hpp"
 
 int main() {
     // char s[] = "";
@@ -10,9 +11,7 @@ int main() {
 
     printf("%s\n", s);
 
-    for (unsigned int i = 0; i < 16; ++i) {
-        printf("%02x", (int)(hash[i]) & 0xFF);
-    }
-    printf("\n");
+    prtln_h(hash);
+
     return 0;
 }
