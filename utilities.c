@@ -7,7 +7,11 @@ void output_bstr_as_hex(char* binstr, int does_print){
         for (unsigned int i = 0; i < 16; ++i) {
             printf("%02x", (int)(binstr[i]) & 0xFF);
         }
-        return 0;
+        printf("\n");
+        return;
+    }
+    else{
+        //possibly unused case
     }
     
 }

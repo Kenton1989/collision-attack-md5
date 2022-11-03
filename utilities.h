@@ -1,5 +1,5 @@
 
 
-char* binstr_to_hexdigest(char* binstr);
+void output_bstr_as_hex(char* binstr, int does_print);
 
 

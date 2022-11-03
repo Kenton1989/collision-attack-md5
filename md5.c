@@ -4,22 +4,34 @@
  * structures.
  */
 
+/*
+zpz: though it's from rsa memo, WHY little endian?
+ */
+
 #include "md5.h"
 
 /*
- * Constants defined by the MD5 algorithm
+ * Constants defined by the MD5 algorithm.
+ * act as initial value (IV) of md5 states.
  */
 #define A 0x67452301
 #define B 0xefcdab89
 #define C 0x98badcfe
 #define D 0x10325476
 
+/*
+shift table, after xor with k and msg, specify per-round shift amount
+*/
 static uint32_t S[] = {7,  12, 17, 22, 7,  12, 17, 22, 7,  12, 17, 22, 7,
                        12, 17, 22, 5,  9,  14, 20, 5,  9,  14, 20, 5,  9,
                        14, 20, 5,  9,  14, 20, 4,  11, 16, 23, 4,  11, 16,
                        23, 4,  11, 16, 23, 4,  11, 16, 23, 6,  10, 15, 21,
                        6,  10, 15, 21, 6,  10, 15, 21, 6,  10, 15, 21};
 
+/*
+constants generated with sin function, integer as inputs, mult 2^32 as k value at that pos
+used to xor with msg and A in each round
+*/
 static uint32_t K[] = {
     0xd76aa478, 0xe8c7b756, 0x242070db, 0xc1bdceee, 0xf57c0faf, 0x4787c62a,
     0xa8304613, 0xfd469501, 0x698098d8, 0x8b44f7af, 0xffff5bb1, 0x895cd7be,
@@ -35,6 +47,7 @@ static uint32_t K[] = {
 
 /*
  * Bit-manipulation functions defined by the MD5 algorithm
+ * 2011 paper fast coll atk on md5 exploits H as main target (high linearity)
  */
 #define F(X, Y, Z) ((X & Y) | (~X & Z))
 #define G(X, Y, Z) ((X & Z) | (Y & ~Z))
@@ -43,6 +56,8 @@ static uint32_t K[] = {
 
 /*
  * Padding used to make the size (in bits) of the input congruent to 448 mod 512
+ * length code (64b, 8B) is appended to the end of padding, to pad m to mult of 512
+ * std md5 pd
  */
 static uint8_t PADDING[] = {
     0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -69,6 +84,12 @@ void md5Init(MD5Context *ctx) {
  *
  * If the input fills out a block of 512 bits, apply the algorithm (md5Step)
  * and save the result in the buffer. Also updates the overall size.
+ * 
+ * this function gets arbitrary length input and update digest in MD5Context object
+ * since it only works with full blocks a finalize() step is needed
+ * 
+ * 
+ * input_len: length of input
  */
 void md5Update(MD5Context *ctx, uint8_t *input_buffer, size_t input_len) {
     uint32_t input[16];
@@ -77,6 +98,9 @@ void md5Update(MD5Context *ctx, uint8_t *input_buffer, size_t input_len) {
 
     // Copy each byte in input_buffer into the next space in our context input
     for (unsigned int i = 0; i < input_len; ++i) {
+        /**
+         * copy byte by byte until get 64B, then do md5 update.
+        */
         ctx->input[offset++] = (uint8_t) * (input_buffer + i);
 
         // If we've filled our context input, copy it into our local array input
@@ -88,6 +112,10 @@ void md5Update(MD5Context *ctx, uint8_t *input_buffer, size_t input_len) {
                 // Convert to little-endian
                 // The local variable `input` our 512-bit chunk separated into
                 // 32-bit words we can use in calculations
+                /***
+                 * this may be implicitly specified by RFC standard that some operations requires little endian
+                 * with data or sth else, as output is also reversed (little endian)
+                */
                 input[j] = (uint32_t)(ctx->input[(j * 4) + 3]) << 24 |
                            (uint32_t)(ctx->input[(j * 4) + 2]) << 16 |
                            (uint32_t)(ctx->input[(j * 4) + 1]) << 8 |
@@ -102,6 +130,7 @@ void md5Update(MD5Context *ctx, uint8_t *input_buffer, size_t input_len) {
 /*
  * Pad the current input to get to 448 bytes, append the size in bits to the
  * very end, and save the result of the final iteration into digest.
+ * it works for both last unpadded block and length padding as a two-step wrapper.
  */
 void md5Finalize(MD5Context *ctx) {
     uint32_t input[16];
@@ -117,6 +146,9 @@ void md5Finalize(MD5Context *ctx) {
     // Do a final update (internal to this function)
     // Last two 32-bit words are the two halves of the size (converted from
     // bytes to bits)
+    /**
+     * unlooped process from md5Update()
+    */
     for (unsigned int j = 0; j < 14; ++j) {
         input[j] = (uint32_t)(ctx->input[(j * 4) + 3]) << 24 |
                    (uint32_t)(ctx->input[(j * 4) + 2]) << 16 |
@@ -129,6 +161,9 @@ void md5Finalize(MD5Context *ctx) {
     md5Step(ctx->buffer, input);
 
     // Move the result into digest (convert from little-endian)
+    /**
+     * use bin mask to reverse final digest, specified by output section of RFC
+    */
     for (unsigned int i = 0; i < 4; ++i) {
         ctx->digest[(i * 4) + 0] = (uint8_t)((ctx->buffer[i] & 0x000000FF));
         ctx->digest[(i * 4) + 1] =
@@ -142,8 +177,11 @@ void md5Finalize(MD5Context *ctx) {
 
 /*
  * Step on 512 bits of input with the main MD5 algorithm.
+ buffer: state at this step
+ input: next 512b as input block
  */
 void md5Step(uint32_t *buffer, uint32_t *input) {
+    // get A B C D
     uint32_t AA = buffer[0];
     uint32_t BB = buffer[1];
     uint32_t CC = buffer[2];
@@ -154,6 +192,8 @@ void md5Step(uint32_t *buffer, uint32_t *input) {
     unsigned int j;
 
     for (unsigned int i = 0; i < 64; ++i) {
+        // 4 stages inside a single switch
+        // j is msg word to be xor in cur step
         switch (i / 16) {
             case 0:
                 E = F(BB, CC, DD);
