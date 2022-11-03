@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-namespace CONSTANTS {
+namespace Md5 {
 // common data type
 using Byte = uint8_t;
 using Word = uint32_t;

@@ -51,12 +51,12 @@ Bytes padding(const Bytes &bytes) {
     size_t blocks = (bytes.size() +
                      1 /*1 byte for necessary padding*/ +
                      8 /*8 byte for storing message length*/ +
-                     CONSTANTS::BLOCK_BYTES - 1 /*change the floor division to celling division*/) /
-                     CONSTANTS::BLOCK_BYTES;
+                      BLOCK_BYTES - 1 /*change the floor division to celling division*/) /
+                      BLOCK_BYTES;
 
     Bytes res = bytes;
     res.push_back(0x80);
-    res.resize(blocks * CONSTANTS::BLOCK_BYTES, 0x00);
+    res.resize(blocks *  BLOCK_BYTES, 0x00);
 
     // the beginning index of the bytes used to store the length of message
     size_t size_beg = res.size() - 8;
@@ -82,17 +82,17 @@ int msg_idx_of_step(int step) {
 Word perform_one_step(int step, Word msg, Word a, Word b, Word c, Word d) {
     Word f;
     if (step < 16)
-        f = CONSTANTS::F(b, c, d);
+        f =  F(b, c, d);
     else if (step < 32)
-        f = CONSTANTS::G(b, c, d);
+        f =  G(b, c, d);
     else if (step < 48)
-        f = CONSTANTS::H(b, c, d);
+        f =  H(b, c, d);
     else
-        f = CONSTANTS::I(b, c, d);
+        f =  I(b, c, d);
 
-    Word temp = f + a + CONSTANTS::K[step] + msg;
+    Word temp = f + a +  K[step] + msg;
 
-    Word res = b + l_rotate(temp, CONSTANTS::S[step]);
+    Word res = b + l_rotate(temp,  S[step]);
 
     return res;
 }
@@ -140,17 +140,17 @@ void Md5BlockHasher::cal_range(int from, int to) {
 }
 
 Words Md5BlockHasher::cal_all() {
-    cal_range(CONSTANTS::FIRST_STEP, CONSTANTS::LAST_STEP);
+    cal_range(FIRST_STEP,  LAST_STEP);
     return final_output();
 }
 
 Words Md5BlockHasher::cal_to_end(int from) {
-    cal_range(from, CONSTANTS::LAST_STEP);
+    cal_range(from,  LAST_STEP);
     return final_output();
 }
 
 Word Md5BlockHasher::cal_from_begin(int until) {
-    cal_range(CONSTANTS::FIRST_STEP, until);
+    cal_range( FIRST_STEP, until);
     return output_of(until);
 }
 
@@ -220,11 +220,11 @@ Bytes hash_string(const std::string &s) {
 
     Words words = encode_words(input);
 
-    Words state = CONSTANTS::IV;
+    Words state =  IV;
 
-    for (size_t i = 0; i < words.size(); i += CONSTANTS::BLOCK_WORDS) {
-        Words block(words.begin() + i, words.begin() + i + CONSTANTS::BLOCK_WORDS);
-        Md5BlockHasher hasher(CONSTANTS::IV, block);
+    for (size_t i = 0; i < words.size(); i +=  BLOCK_WORDS) {
+        Words block(words.begin() + i, words.begin() + i +  BLOCK_WORDS);
+        Md5BlockHasher hasher( IV, block);
         state = hasher.cal_all();
     }
 
