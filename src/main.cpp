@@ -1,5 +1,6 @@
 #include <cstdio>
 
+#include "attack.hpp"
 #include "md5.hpp"
 #include "util.hpp"
 

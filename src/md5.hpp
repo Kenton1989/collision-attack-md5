@@ -34,8 +34,6 @@ inline Word r_rotate(Word x, int shift) {
     return l_rotate(x, (sizeof(x) * 8 - shift));
 }
 
-const StepOf step_of;
-
 // padding the input bytes
 Bytes padding(const Bytes &bytes);
 

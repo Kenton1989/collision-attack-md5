@@ -10,15 +10,6 @@
 
 namespace Md5 {
 
-class StepOf {
-   public:
-    // a1 = the 1st output of a, which is in step 0
-    int a(int i) const { return i * 4 - 4; }
-    int b(int i) const { return i * 4 - 1; }
-    int c(int i) const { return i * 4 - 2; }
-    int d(int i) const { return i * 4 - 3; }
-};
-
 // define POV of md5, which is proven to be 24
 const int POV = 24;
 
@@ -41,9 +32,11 @@ class StepOf {
     int d(int i) const { return i * 4 - 3; }
 };
 
+const StepOf step_of;
+
 // the shifting of each step of MD5
 const Word S[] = {7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22,
-                  5, 9,  14, 20, 5, 9,  14, 20, 5, 9,  14, 20, 5, 9,  14, 20,
+                  5, 9, 14, 20, 5, 9, 14, 20, 5, 9, 14, 20, 5, 9, 14, 20,
                   4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23,
                   6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21};
 
@@ -77,4 +70,4 @@ inline Word I(Word b, Word c, Word d) { return c ^ (b | ~d); }
 
 }  // namespace Md5
 
-#endif
+#endif  // COLLISION_ATTACK_CONSTANTS_HPP_
