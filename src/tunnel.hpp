@@ -15,11 +15,21 @@ namespace Tunnel {
 struct Modification {
     int index;
     Word new_val;
+
+    Modification(int index, Word new_val) {
+        this->index = index;
+        this->new_val = new_val;
+    }
 };
 
 struct Solution {
     int pov;  // first step (0 index) that need to recalculate
     std::vector<Modification> modifications;
+
+    Solution(int pov, std::vector<Modification> mods) {
+        this->pov = pov;
+        this->modifications = mods;
+    }
 };
 
 // searched_bits_mask & ~(q10 ^ 0) & ~(q11 ^ -1)
