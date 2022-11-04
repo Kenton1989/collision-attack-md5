@@ -2,59 +2,25 @@
 
 #include <string>
 #include <vector>
-#include "md5.hpp"
-#include "constants.hpp"
 
+#include "constants.hpp"
+#include "md5.hpp"
 
 namespace Tunnel {
-using std::vector;
-using Words = Md5::Words;
-using Word = Md5::Word;
-using Byte = Md5::Byte;
-using Bytes = Md5::Bytes;
 
-Tunnel::Tunnel(const int start_step, 
-    const Words start_step_iv,
-    const int tunneled_step, 
-    const vector<int> involved_message_idxs, 
-    const vector<int> free_bit_positions)
-    {
-        this->set_start_step_iv(start_step_iv);
-        this->_tunneled_step = tunneled_step;
-        this->_involved_message_idxs = involved_message_idxs;
-        this->_free_bit_positions = free_bit_positions;
+inline std::vector<Solution> q9_solve(const Md5::Md5BlockHasher &h, Word searched_bits_mask) {
+    Word q9 = h.output_of(8);
+    Word q10 = h.output_of(9);
+    Word q11 = h.output_of(10);
 
-        
+    Word searched_bits = searched_bits_mask & ~(q10 ^ 0) & ~(q11 ^ -1);
+
+    Word inv_searched = ~searched_bits;
+    for (Word changed_bits = (inv_searched + 1) & searched_bits;
+         changed_bits != 0;
+         changed_bits = (changed_bits + inv_searched + 1) & searched_bits) {
+        Word new_q9 = q9 ^ changed_bits;
     }
-
-vector<Words> Tunnel::generate_other_povs()
-{
-
 }
 
-Words Tunnel::get_start_step_iv()
-{
-
-}
-
-void Tunnel::set_start_step_iv(Words value)
-{
-
-}
-
-int Tunnel::get_tunneled_step()
-{
-
-}
-
-Word Tunnel::solve_message(const int step)
-{
-    
-}
-
-Word Tunnel::solve_Q(const int step)
-{
-
-}
-
-}
+}  // namespace Tunnel

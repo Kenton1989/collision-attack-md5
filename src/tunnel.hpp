@@ -5,24 +5,33 @@
 
 #include <string>
 #include <vector>
-#include "md5.hpp"
+
+#include "common.hpp"
 #include "constants.hpp"
+#include "md5.hpp"
 
-namespace Tunnel{
+namespace Tunnel {
 
-
-class Tunnel{
-    public:
-        Tunnel(const int start_step, const int tunneled_step, const int * involved_message_words);
-        Md5::Words Evaluate();
-        
-
-    private: 
+struct Modification {
+    int index;
+    Word new_val;
 };
 
+struct Solution {
+    int pov;  // first step (0 index) that need to recalculate
+    std::vector<Modification> modifications;
+};
 
+// searched_bits_mask & ~(q10 ^ 0) & ~(q11 ^ -1)
+std::vector<Solution> q9_solve(const Md5::Md5BlockHasher &h, Word searched_bits_mask);
 
-}
+// searched_bits_mask & ~(q5 ^ 0) & ~(q6 ^ -1)
+std::vector<Solution> q4_solve(const Md5::Md5BlockHasher &h, Word searched_bits_mask);
 
+using Solver = std::vector<Solution> (*)(const Md5::Md5BlockHasher &h, Word searched_bits_mask);
+
+const std::vector<Solver> solvers = {q9_solve, q4_solve};
+
+}  // namespace Tunnel
 
 #endif

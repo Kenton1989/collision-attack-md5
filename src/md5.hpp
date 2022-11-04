@@ -5,6 +5,8 @@
 
 #include <string>
 #include <vector>
+
+#include "common.hpp"
 #include "constants.hpp"
 
 namespace Md5 {

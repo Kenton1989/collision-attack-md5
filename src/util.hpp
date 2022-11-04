@@ -3,12 +3,7 @@
 
 #include <cstdio>
 
-#include "md5.hpp"
-
-using Md5::Byte;
-using Md5::Bytes;
-using Md5::Word;
-using Md5::Words;
+#include "common.hpp"
 
 inline void prt_h(Byte b) {
     printf("%02x", b);

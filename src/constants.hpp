@@ -1,16 +1,14 @@
-#ifndef COLLISION_ATTACK_TUNNEL_HPP_
-#define COLLISION_ATTACK_TUNNEL_HPP_
+#ifndef COLLISION_ATTACK_CONSTANTS_HPP_
+#define COLLISION_ATTACK_CONSTANTS_HPP_
 
 #include <stddef.h>
+
 #include <string>
 #include <vector>
 
+#include "common.hpp"
+
 namespace Md5 {
-// common data type
-using Byte = uint8_t;
-using Word = uint32_t;
-using Bytes = std::vector<Byte>;
-using Words = std::vector<Word>;
 
 class StepOf {
    public:
@@ -23,7 +21,6 @@ class StepOf {
 
 // define POV of md5, which is proven to be 24
 const int POV = 24;
-
 
 // define 0-index steps
 const int FIRST_STEP = 0;
@@ -46,7 +43,7 @@ class StepOf {
 
 // the shifting of each step of MD5
 const Word S[] = {7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22,
-                  5, 9, 14, 20, 5, 9, 14, 20, 5, 9, 14, 20, 5, 9, 14, 20,
+                  5, 9,  14, 20, 5, 9,  14, 20, 5, 9,  14, 20, 5, 9,  14, 20,
                   4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23,
                   6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21};
 
@@ -64,7 +61,6 @@ const Word K[] = {
     0xffeff47d, 0x85845dd1, 0x6fa87e4f, 0xfe2ce6e0, 0xa3014314, 0x4e0811a1,
     0xf7537e82, 0xbd3af235, 0x2ad7d2bb, 0xeb86d391};
 
-
 // the initial state/initial vector of MD5
 const Words IV = {
     0x67452301,  // A
@@ -73,17 +69,12 @@ const Words IV = {
     0x10325476,  // D
 };
 
-
 // non linear function used in MD5
 inline Word F(Word b, Word c, Word d) { return (b & c) | (d & ~b); }
 inline Word G(Word b, Word c, Word d) { return (b & d) | (c & ~d); }
 inline Word H(Word b, Word c, Word d) { return b ^ c ^ d; }
 inline Word I(Word b, Word c, Word d) { return c ^ (b | ~d); }
 
-
-
-
-}
-
+}  // namespace Md5
 
 #endif
