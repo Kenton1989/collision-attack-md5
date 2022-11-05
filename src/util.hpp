@@ -45,6 +45,10 @@ inline IntT randint() {
     static std::uniform_int_distribution<IntT> dist;
     return dist(rand_engine());
 }
+template <>
+inline Byte randint<Byte>() {
+    return randint() & 0xFF;
+}
 
 template <typename IntT = int>
 inline std::vector<IntT> randvec(size_t sz) {

@@ -128,7 +128,7 @@ Word solve_x_for_step(const Md5::Md5BlockHasher &h, const int step) {
 
     // Word new_x7 = Md5::r_rotate(q8 - q7, 7) - Md5::F(q7, q6, q5) - new_q4 - Md5::K[7];
     Word new_x = Md5::r_rotate(q1 - q0, Md5::S[step]) - Md5::step_to_func_result(step, q0, q_1, q_2) - q_3 - Md5::K[step];
-    return;
+    return new_x;
 }
 
 void verify_q9_tunnel(Md5::Md5BlockHasher &verify_h,
@@ -141,6 +141,7 @@ void verify_q9_tunnel(Md5::Md5BlockHasher &verify_h,
     // while they must follow q9 tunnel def on them
     std::cout << "----------------------------------------------------------------------\n";
     std::cout << ">>> Verifying q9 tunnel with speficied q10 and q11:\n";
+    std::cout << "----------------------------------------------------------------------\n";
     if (specified_states.size() != 2) throw("in verify q9 tunnel: length of specified state != 2");
     Word q6 = verify_h.output_of(5);
     Word q7 = verify_h.output_of(6);
@@ -148,6 +149,8 @@ void verify_q9_tunnel(Md5::Md5BlockHasher &verify_h,
     Word old_q9 = verify_h.output_of(8);
     Word q10 = specified_states[0];
     Word q11 = specified_states[1];
+
+    Word search_bit_constraint = ~q10 & q11;
 
     Word x10;
     Word x11;
@@ -176,7 +179,7 @@ void verify_q9_tunnel(Md5::Md5BlockHasher &verify_h,
     verify_h.set_msg_word(10, x10);
     verify_h.set_msg_word(11, x11);
 
-    std::cout << "For specified q10 and q11, x10 and x11 have the following modification:";
+    std::cout << "For specified q10 and q11, x10 and x11 have the following modification:\n";
     std::cout << "x10 to: " << x10 << " ,\n";
     std::cout << "x11 to: " << x11 << " \n";
     std::cout << "these are kept unchanged regardless of q9 if q10 and q11 satisfy tunnel q9 definition.\n";
@@ -186,6 +189,13 @@ void verify_q9_tunnel(Md5::Md5BlockHasher &verify_h,
 
     for (Word cur_q9 : new_q9) {
         std::cout << "\n>>> verifying current q9:" << cur_q9 << "\n";
+
+        Word q9_changed = cur_q9 ^ old_q9;
+        if (q9_changed & ~search_bit_constraint != 0) {
+            std::cout << "Current q9 " << cur_q9 << " violates tunnel constraint on q10 and q11, continue\n";
+            continue;
+        }
+
         verify_h.set_output_of(8, cur_q9);
         cur_x8 = solve_x_for_step(verify_h, 8);
         cur_x9 = solve_x_for_step(verify_h, 9);
@@ -216,10 +226,10 @@ void verify_q9_tunnel(Md5::Md5BlockHasher &verify_h,
 
         Word cur_q12 = verify_h.output_of(11);
         if (cur_q12 == q12) {
-            std::cout << "锵锵 ~ verified new q12 from q9' equal to old q12~\n"
+            std::cout << "qiang qiang ~ verified new q12 from q9' equal to old q12~\n"
                       << "since x8, x9, x12 don't appear before q25, by definition q24 keeps the same.\n";
         } else {
-            throw "q12 verification fails, something goes wrong";
+            throw "q12 verification fails, something goes wrong, either input q9 conflict with specified q10 and q11 or program fails";
         }
     };
     return;
@@ -235,6 +245,7 @@ void verify_q4_tunnel(Md5::Md5BlockHasher &verify_h,
     // while they must follow q9 tunnel def on them
     std::cout << "----------------------------------------------------------------------\n";
     std::cout << ">>> Verifying q4 tunnel with speficied q5 and q6:\n";
+    std::cout << "----------------------------------------------------------------------\n";
     if (specified_states.size() != 2) throw("in verify q4 tunnel: length of specified state != 2");
     Word q1 = verify_h.output_of(0);
     Word q2 = verify_h.output_of(1);
@@ -242,6 +253,8 @@ void verify_q4_tunnel(Md5::Md5BlockHasher &verify_h,
     Word old_q4 = verify_h.output_of(3);
     Word q5 = specified_states[0];
     Word q6 = specified_states[1];
+
+    Word search_bit_constraint = ~q5 & q6;
 
     Word x5;
     Word x6;
@@ -275,7 +288,7 @@ void verify_q4_tunnel(Md5::Md5BlockHasher &verify_h,
     double eq_case = 0;
     double ne_case = 0;
 
-    std::cout << "For specified q5 and q6, x5 and x6 have the following modification:";
+    std::cout << "For specified q5 and q6, x5 and x6 have the following modification:\n";
     std::cout << "x5 to: " << x5 << " ,\n";
     std::cout << "x6 to: " << x6 << " \n";
     std::cout << "these are kept unchanged regardless of q9 if q5 and q6 satisfy tunnel q4 definition.\n";
@@ -285,6 +298,12 @@ void verify_q4_tunnel(Md5::Md5BlockHasher &verify_h,
 
     for (Word cur_q4 : new_q4) {
         std::cout << "\n>>> verifying current q9:" << cur_q4 << "\n";
+        Word q4_changed = cur_q4 ^ old_q4;
+        if (q4_changed & ~search_bit_constraint != 0) {
+            std::cout << "Current q9 " << cur_q4 << " violates tunnel constraint on q10 and q11, continue\n";
+            continue;
+        }
+
         verify_h.set_output_of(3, cur_q4);
         cur_x3 = solve_x_for_step(verify_h, 3);
         cur_x4 = solve_x_for_step(verify_h, 4);
@@ -315,7 +334,7 @@ void verify_q4_tunnel(Md5::Md5BlockHasher &verify_h,
 
         Word cur_q7 = verify_h.output_of(6);
         if (cur_q7 == q7) {
-            std::cout << "锵锵 ~ verified new q7 from q4' equal to old q7~\n";
+            std::cout << "qiang qiang ~ verified new q7 from q4' equal to old q7~\n";
         } else {
             throw "q12 verification fails, something goes wrong";
         }

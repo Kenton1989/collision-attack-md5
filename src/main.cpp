@@ -2,6 +2,7 @@
 
 #include "attack.hpp"
 #include "md5.hpp"
+#include "tunnel_eval_test.hpp"
 #include "util.hpp"
 
 int main() {
@@ -13,6 +14,11 @@ int main() {
     printf("%s\n", s);
 
     prtln_h(hash);
+
+    Words msg = rand_words(16);
+
+    // evaluate_q4(msg);
+    evaluate_q9(msg);
 
     return 0;
 }
