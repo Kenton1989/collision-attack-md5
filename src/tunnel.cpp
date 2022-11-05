@@ -283,8 +283,9 @@ void verify_q4_tunnel(Md5::Md5BlockHasher &verify_h,
     verify_h.set_msg_word(6, x6);
 
     // need to compare old q24 to verify 32nd bit suff cond for q24
-    verify_h.cal_range(5, 23);
+    verify_h.cal_range(5, 24);
     Word old_q24 = verify_h.output_of(23);
+    Word old_q23 = verify_h.output_of(22);
     double eq_case = 0;
     double ne_case = 0;
 
@@ -342,18 +343,25 @@ void verify_q4_tunnel(Md5::Md5BlockHasher &verify_h,
         // since modification on x4 may violate 32th bit suff cond for q24,
         // need to further verify q24
         verify_h.cal_range(7, 24);
+        Word cur_q23 = verify_h.output_of(22);
         Word cur_q24 = verify_h.output_of(23);
-        if (cur_q24 == old_q24) {
-            std::cout << "Lucky! new q24 equals to old q24 and have value " << cur_q24 << ";\n";
-            eq_case += 1;
+
+        if (cur_q23 == old_q23) {
+            std::cout << "new q23 is the same as old q23 and both have value " << cur_q23 << "\n";
         } else {
-            std::cout << "Opps unlucky, current q24 " << cur_q24 << " != old q24 " << old_q24 << "\n";
-            ne_case += 1;
+            std::cout << "cur q23 " << cur_q23 << " is different from old q23 " << old_q23 << "\n";
         }
 
-        std::cout << "passed in q4 cases to check: " << ne_case + eq_case << ";\n";
-        std::cout << "32th bit suff cond pass rate: " << eq_case / (ne_case + eq_case) << ";\n";
+        if ((cur_q24 >> 31) == 1) {
+            std::cout << "Lucky! new q24 has 32th bit = 1, satisfying suff cond and have value " << cur_q24 << ";\n";
+            eq_case += 1;
+        } else {
+            std::cout << "Opps unlucky, current q24 " << cur_q24 << " != old q24 " << old_q24 << " on bit 32\n";
+            ne_case += 1;
+        }
     };
+    std::cout << "passed in q4 cases to check: " << ne_case + eq_case << ";\n";
+    std::cout << "32th bit suff cond pass rate: " << eq_case / (ne_case + eq_case) << ";\n";
     return;
 }
 
