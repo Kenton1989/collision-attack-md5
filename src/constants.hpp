@@ -68,6 +68,22 @@ inline Word G(Word b, Word c, Word d) { return (b & d) | (c & ~d); }
 inline Word H(Word b, Word c, Word d) { return b ^ c ^ d; }
 inline Word I(Word b, Word c, Word d) { return c ^ (b | ~d); }
 
+inline Word step_to_func_result(const int step, const Word b, const Word c, const Word d) {
+    if (0 <= step && step < 16) {
+        return F(b, c, d);
+    }
+    if (16 <= step && step < 32) {
+        return G(b, c, d);
+    }
+    if (32 <= step && step < 48) {
+        return H(b, c, d);
+    }
+    if (48 <= step && step < 64) {
+        return I(b, c, d);
+    }
+    throw;
+}
+
 }  // namespace Md5
 
 #endif  // COLLISION_ATTACK_CONSTANTS_HPP_
