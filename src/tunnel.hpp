@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 
+#include <map>
 #include <string>
 #include <vector>
 
@@ -46,7 +47,7 @@ inline std::vector<Solution> dummy_solver(const Md5::Md5BlockHasher &h, Word sea
 
 using Solver = std::vector<Solution> (*)(const Md5::Md5BlockHasher &h, Word searched_bits_mask);
 
-const std::vector<Solver> solvers = {dummy_solver, dummy_solver};
+const std::map<int, Solver> solvers = {{9, q9_solve}, {4, q4_solve}};
 
 }  // namespace Tunnel
 
