@@ -32,11 +32,11 @@ inline void prtln_h(const T& v) {
     printf("\n");
 }
 
-const long long RAND_SEED = time(0);
-// const long long RAND_SEED = 0;
+// const long long RAND_SEED = time(0);
+const long long RAND_SEED = 114514;
 
 inline std::default_random_engine& rand_engine() {
-    static std::default_random_engine e(time(0));
+    static std::default_random_engine e(RAND_SEED);
     return e;
 }
 
