@@ -74,8 +74,18 @@ std::pair<Words, Words> find_first_block(const Words &iv) {
         Words h1a = hasher.cal_to_end(16);
 
         Words blk0b = add_diff(hasher.get_msg(), M0_DIFF);
-        Words h1b = hash_blk(blk0b, iv);
+        Md5::Md5BlockHasher hasher2(iv, blk0b);
+        Words h1b = hasher2.cal_all();
 
+        for (int i = 0; i < 16; ++i) {
+            Word o0 = hasher.output_of(i);
+            Word o1 = hasher2.output_of(i);
+            Word diff = o1 - o0;
+            Word true_diff = OUTPUT_DIFF_0[i];
+            if (true_diff != diff) {
+                throw "bad result";
+            }
+        }
         if (!assert_diff(h1a, h1b, H1_DIFF)) continue;
 
         return std::make_pair(hasher.get_msg(), blk0b);
@@ -117,7 +127,7 @@ void apply_simple_modification(Md5::Md5BlockHasher &hasher,
 
         Word new_val = val;
         new_val = (new_val & ~const_c.mask) | const_c.value;
-        new_val = (new_val & ~adj_c.mask) | (adj_c.mask & (adj_c.value ^ adj_val));
+        new_val = (new_val & ~adj_c.mask) | (adj_c.mask & (~adj_c.value ^ adj_val));
 
         Word new_msg =
             Md5::r_rotate(new_val - adj_val, Md5::S[step]) - in[0] - Md5::F(in[1], in[2], in[3]) - Md5::K[step];
@@ -126,8 +136,8 @@ void apply_simple_modification(Md5::Md5BlockHasher &hasher,
         hasher.set_msg_word(step, new_msg);
     }
 }
-
-// complex modification for each step (0-index)
+// 0x27fbc49
+//  complex modification for each step (0-index)
 void mod_msg0_step16_17(Md5::Md5BlockHasher &hasher) {
     // a5,4 = b4,4, a5,16 = b4,16, a5,18 = 0, a5,32 = b4,32
     // a5, 31 = b4, 31 + 1 = 1

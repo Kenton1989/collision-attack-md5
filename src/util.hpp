@@ -33,7 +33,8 @@ inline void prtln_h(const T& v) {
 }
 
 // const long long RAND_SEED = time(0);
-const long long RAND_SEED = 114514;
+// const long long RAND_SEED = 114514;
+const long long RAND_SEED = 1919801;
 
 inline std::default_random_engine& rand_engine() {
     static std::default_random_engine e(RAND_SEED);

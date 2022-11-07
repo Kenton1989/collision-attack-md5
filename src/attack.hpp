@@ -14,23 +14,60 @@ std::pair<Words, Words> collision(const Words &iv = Md5::IV);
 void apply_simple_modification(Md5::Md5BlockHasher &hasher,
                                const PartialWord const_cond[], const PartialWord adj_cond[]);
 
+// p = power, p2 = 2 to the power of
+constexpr inline Word p2(int power) {
+    return 1u << power;
+}
+// base case of p2sum
+constexpr inline Word p2sum(int power) {
+    Word base = 1;
+    if (power < 0) {
+        base = -1;
+        power = -power;
+    }
+    return base << power;
+}
+// sum of the power of 2
+// negative will be considered as subtraction
+// -1 cannot be represented with this function, please manually add -1 after this function
+template <typename... Ts>
+constexpr inline Word p2sum(int power, Ts... powers) {
+    return p2sum(power) + p2sum(powers...);
+}
+
 const Word M0_DIFF[] = {0x0, 0x0, 0x0, 0x0,
                         1u << 31, 0x0, 0x0, 0x0,
                         0x0, 0x0, 0x0, 1u << 15,
                         0x0, 0x0, 1u << 31, 0x0};
 const Word M1_DIFF[] = {0x0, 0x0, 0x0, 0x0,
                         1u << 31, 0x0, 0x0, 0x0,
-                        0x0, 0x0, 0x0, Word(-1) << 15,
+                        0x0, 0x0, 0x0, -1u << 15,
                         0x0, 0x0, 1u << 31, 0x0};
 
 const Word H1_DIFF[] = {
-    1u << 31,
-    (1u << 31) + (1 << 25),
-    (1u << 31) + (1 << 25),
-    (1u << 31) + (1 << 25)};
+    p2(31),
+    p2sum(31, 25),
+    p2sum(31, 25),
+    p2sum(31, 25)};
 
 const Word H2_DIFF[] = {0, 0, 0, 0};
 
+constexpr Word OUTPUT_DIFF_0[Md5::POV] = {
+    0x0, 0x0, 0x0, 0x0,
+    -p2(6), p2sum(-6, 23, 31), p2sum(-6, 23, -27) - 1, p2sum(0, -15, -17, -23),
+    p2sum(0, -6, 31), p2sum(12, 31), p2sum(30, 31), p2sum(-7, -13, 31),
+    p2sum(24, 31), p2(31), p2sum(3, -15, 31), p2sum(-29, 31),
+    p2(31), p2(31), p2sum(17, 31), p2(31),
+    p2(31), p2(31), 0x0, 0x0};
+
+constexpr Word OUTPUT_DIFF_1[Md5::POV] = {
+    p2sum(25, 31), p2sum(5, 25, 31), p2sum(5, 11, 16, 25, 31), p2sum(-1, 5, 25, 31),
+    p2sum(0, 6, 8, 9, 31), p2sum(-16, -20, 31), p2sum(-6, -27, 31), p2sum(15, -17, -23, 31),
+    p2sum(0, 6, 31), p2sum(12, 31), p2sum(31), p2sum(-7, -13, 31),
+    p2sum(24, 31), p2sum(31), p2sum(3, 15, 31), p2sum(-29, 31),
+    p2sum(31), p2sum(31), p2sum(17, 31), p2sum(31),
+    p2sum(31), p2sum(31), 0x0, 0x0};
+// 2332032997U, 41925697U
 constexpr PartialWord SIMPLE_CONST_COND_0[] = {
     PartialWord(),              // step 0 a1
     PartialWord(),              // step 1 d1
@@ -39,7 +76,7 @@ constexpr PartialWord SIMPLE_CONST_COND_0[] = {
                 /*epsilon extra*/ 5, 6),  // step 3 b1
     PartialWord(1, 3, 6, -7, -8, -9, -10, -11, -12,
                 -13, -14, -15, -16, -17, -18, -19,
-                -20, -21, -22, 23, -24, -26, -28, 32,
+                -20, -21, -22, 23, -24, -26, 28, 32,
                 /*epsilon extra*/ -5, -27, -29, -30, -31),  // step 4 a2
     PartialWord(1, -3, -6, 7, -8, -9, -10, 11, 12,
                 13, 14, -15, 16, 17, 18, 19, 20,
@@ -73,7 +110,7 @@ constexpr PartialWord SIMPLE_CONST_COND_0[] = {
     PartialWord(-4, 16, 25, -26, 30,
                 /*epsilon extra*/ -15, 31,
                 /*search extra*/ -9, -21, -23),  // step 14 c4
-    PartialWord(30 /*epsilon extra*/, 31),       // step 15 b4
+    PartialWord(30 /*epsilon extra*/, -31),      // step 15 b4
 };
 
 constexpr PartialWord SIMPLE_ADJ_COND_0[] = {
@@ -81,19 +118,24 @@ constexpr PartialWord SIMPLE_ADJ_COND_0[] = {
     PartialWord(),  // step 1 d1
     PartialWord(),  // step 2 c1
     PartialWord(8, 9, 10, 11, 13, 14, 15,
-                16, 17, 18, 19, 21, 22, 23),   // step 3 b1
-    PartialWord(),                             // step 4 a2
-    PartialWord(2, 4, 5, 25, 27, 29, 30, 31),  // step 5 d2
-    PartialWord(),                             // step 6 c2
-    PartialWord(),                             // step 7 b2
-    PartialWord(13),                           // step 8 a3
-    PartialWord(),                             // step 9 d3
-    PartialWord(15),                           // step 10 c3
-    PartialWord(25, 26),                       // step 11 b3
-    PartialWord(),                             // step 12 a4
-    PartialWord(),                             // step 13 d4
-    PartialWord(),                             // step 14 c4
-    PartialWord(32, /*epsilon extra*/ -22),    // step 15 b4
+                16, 17, 18, 19, 21, 22, 23
+                // 8, 9, 10, 11, 13, 14, 15,
+                // 16, 17, 18, 19, 21, 22, 23
+                ),  // step 3 b1
+    PartialWord(),  // step 4 a2
+    PartialWord(2, 4, 5, 25, 27, 29, 30, 31
+                // 2,4,5,25,27,29,30,31
+                ),                           // step 5 d2
+    PartialWord(),                           // step 6 c2
+    PartialWord(),                           // step 7 b2
+    PartialWord(13),                         // step 8 a3
+    PartialWord(),                           // step 9 d3
+    PartialWord(15),                         // step 10 c3
+    PartialWord(25, 26),                     // step 11 b3
+    PartialWord(),                           // step 12 a4
+    PartialWord(),                           // step 13 d4
+    PartialWord(),                           // step 14 c4
+    PartialWord(32, /*epsilon extra*/ -22),  // step 15 b4
 };
 
 constexpr PartialWord SIMPLE_CONST_COND_1[] = {
