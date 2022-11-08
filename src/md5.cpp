@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "constants.hpp"
+#include "util.hpp"
 
 namespace Md5 {
 
@@ -69,17 +70,6 @@ Bytes padding(const Bytes &bytes) {
     return res;
 }
 
-int msg_idx_of_step(int step) {
-    if (step < 16)
-        return step;
-    else if (step < 32)
-        return (5 * step + 1) % 16;
-    else if (step < 48)
-        return (3 * step + 5) % 16;
-    else
-        return (7 * step) % 16;
-}
-
 Word perform_one_step(int step, Word msg, Word a, Word b, Word c, Word d) {
     Word f;
     if (step < 16)
@@ -103,7 +93,7 @@ Word perform_one_step(int step, const Words &msg, Word a, Word b, Word c, Word d
     return perform_one_step(step, msg[i], a, b, c, d);
 }
 
-Md5BlockHasher::Md5BlockHasher(const Words &iv, const Words &msg) : _message(msg) {
+Md5BlockHasher::Md5BlockHasher(const Words &iv, Words msg) : _message(std::move(msg)) {
     set_iv(iv);
 }
 
@@ -115,13 +105,21 @@ void Md5BlockHasher::set_iv(const Words &iv) {
     _states[2] = _iv[2];  // C
     _states[3] = _iv[1];  // B
 }
-void Md5BlockHasher::set_msg(const Words &msg) {
-    _message = msg;
+void Md5BlockHasher::set_msg(Words msg) {
+    _message = std::move(msg);
 }
 void Md5BlockHasher::set_msg_word(int index, Word word) {
     _message[index] = word;
 }
-
+void Md5BlockHasher::set_msg_to_ensure_step(int step) {
+    Word a0 = _states[step];
+    Word a = _states[step + 4];
+    Word b = _states[step + 3];
+    Word c = _states[step + 2];
+    Word d = _states[step + 1];
+    Word msg = r_rotate(a - b, Md5::S[step]) - a0 - Md5::step_to_func_result(step, b, c, d) - Md5::K[step];
+    set_msg_word(msg_idx_of_step(step), msg);
+}
 const Words &Md5BlockHasher::get_iv() const {
     return _iv;
 }

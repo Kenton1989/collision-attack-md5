@@ -26,13 +26,13 @@ const size_t BLOCK_WORDS = BLOCK_BYTES / 4;
 class StepOf {
    public:
     // a1 = the 1st output of a, which is in step 0
-    int a(int i) const { return i * 4 - 4; }
-    int b(int i) const { return i * 4 - 1; }
-    int c(int i) const { return i * 4 - 2; }
-    int d(int i) const { return i * 4 - 3; }
+    constexpr int a(int i) const { return i * 4 - 4; }
+    constexpr int b(int i) const { return i * 4 - 1; }
+    constexpr int c(int i) const { return i * 4 - 2; }
+    constexpr int d(int i) const { return i * 4 - 3; }
 };
 
-const StepOf step_of;
+constexpr StepOf step_of;
 
 // the shifting of each step of MD5
 const Word S[] = {7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22,

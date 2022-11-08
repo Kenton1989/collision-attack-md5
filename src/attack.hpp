@@ -68,7 +68,7 @@ constexpr Word OUTPUT_DIFF_1[Md5::POV] = {
     p2sum(31), p2sum(31), p2sum(17, 31), p2sum(31),
     p2sum(31), p2sum(31), 0x0, 0x0};
 // 2332032997U, 41925697U
-constexpr PartialWord SIMPLE_CONST_COND_0[] = {
+constexpr PartialWord CONST_COND_0[] = {
     PartialWord(),              // step 0 a1
     PartialWord(),              // step 1 d1
     PartialWord(-7, -12, -20),  // step 2 c1
@@ -111,9 +111,13 @@ constexpr PartialWord SIMPLE_CONST_COND_0[] = {
                 /*epsilon extra*/ -15, 31,
                 /*search extra*/ -9, -21, -23),  // step 14 c4
     PartialWord(30 /*epsilon extra*/, -31),      // step 15 b4
+    PartialWord(-18 /*epsilon extra*/, 31),      // step 16 a5
+    PartialWord(18),                             // step 17 d5
+    PartialWord(-18),                            // step 18 c5
+    PartialWord()                                // step 19 b5
 };
 
-constexpr PartialWord SIMPLE_ADJ_COND_0[] = {
+constexpr PartialWord ADJ_COND_0[] = {
     PartialWord(),  // step 0 a1
     PartialWord(),  // step 1 d1
     PartialWord(),  // step 2 c1
@@ -136,9 +140,13 @@ constexpr PartialWord SIMPLE_ADJ_COND_0[] = {
     PartialWord(),                           // step 13 d4
     PartialWord(),                           // step 14 c4
     PartialWord(32, /*epsilon extra*/ -22),  // step 15 b4
+    PartialWord(4, 16, 32),                  // step 16 a5
+    PartialWord(30, 32),                     // step 17 d5
+    PartialWord(32),                         // step 18 c5
+    PartialWord(32)                          // step 19 b5
 };
 
-constexpr PartialWord SIMPLE_CONST_COND_1[] = {
+constexpr PartialWord CONST_COND_1[] = {
     PartialWord(-6, -12, 22, -26, 27, -28, 32,
                 /*epsilon extra*/ 17),  // step a1 0
     PartialWord(-2, -3, -6, 12, 17, -22, -26, 27, 28,
@@ -183,7 +191,7 @@ constexpr PartialWord SIMPLE_CONST_COND_1[] = {
     PartialWord(4, /*epsilon extra*/ 16, 17, -29),  // step b4 15
 };
 
-constexpr PartialWord SIMPLE_ADJ_COND_1[] = {
+constexpr PartialWord ADJ_COND_1[] = {
     PartialWord(-32),                                       // step a1 0
     PartialWord(7, 8, 13, 18, 19, 20, 21, 29, 30, 31, 32),  // step d1 1
     PartialWord(4, 5, 32),                                  // step c1 2

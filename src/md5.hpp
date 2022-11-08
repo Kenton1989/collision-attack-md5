@@ -26,19 +26,20 @@ Bytes encode_bytes(const Words &words);
 Bytes encode_bytes(const std::string &s);
 std::string encode_string(const Bytes &bytes);
 
-// rotate operations
-inline Word l_rotate(Word x, int shift) {
-    return x << shift | (x >> (sizeof(x) * 8 - shift));
-}
-inline Word r_rotate(Word x, int shift) {
-    return l_rotate(x, (sizeof(x) * 8 - shift));
-}
-
 // padding the input bytes
 Bytes padding(const Bytes &bytes);
 
 // compute which word of message should be used as input for the given step
-int msg_idx_of_step(int step);
+inline constexpr int msg_idx_of_step(int step) {
+    if (step < 16)
+        return step;
+    else if (step < 32)
+        return (5 * step + 1) % 16;
+    else if (step < 48)
+        return (3 * step + 5) % 16;
+    else
+        return (7 * step) % 16;
+}
 
 // compute ((a + K + msg + f(b,c,d)) <<< S) + b, f is one of F/G/H/I
 // step is 0-index, first step is 0
@@ -49,14 +50,15 @@ Word perform_one_step(int step, const Words &msg, Word a, Word b, Word c, Word d
 
 class Md5BlockHasher {
    public:
-    Md5BlockHasher(const Words &iv, const Words &msg);
+    Md5BlockHasher(const Words &iv, Words msg);
 
     const Words &get_iv() const;
     void set_iv(const Words &iv);
 
     const Words &get_msg() const;
-    void set_msg(const Words &msg);
+    void set_msg(Words msg);
     void set_msg_word(int index, Word word);
+    void set_msg_to_ensure_step(int step);
 
     // perform calculation for a range of steps
     // both end points of range are inclusive

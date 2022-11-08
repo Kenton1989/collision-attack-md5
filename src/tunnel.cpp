@@ -47,9 +47,9 @@ inline std::vector<Solution> q9_solve(const Md5::Md5BlockHasher &h, Word searche
 
         // solve for x that caused by new q9 in q9 tunnel
         // use K[8] for q9
-        Word new_x8 = Md5::r_rotate(new_q9 - q8, 7) - Md5::F(q8, q7, q6) - q5 - Md5::K[8];
-        Word new_x9 = Md5::r_rotate(q10 - new_q9, 12) - Md5::F(new_q9, q8, q7) - q6 - Md5::K[9];
-        Word new_x12 = Md5::r_rotate(q13 - q12, 7) - Md5::F(q12, q11, q10) - new_q9 - Md5::K[12];
+        Word new_x8 = r_rotate(new_q9 - q8, 7) - Md5::F(q8, q7, q6) - q5 - Md5::K[8];
+        Word new_x9 = r_rotate(q10 - new_q9, 12) - Md5::F(new_q9, q8, q7) - q6 - Md5::K[9];
+        Word new_x12 = r_rotate(q13 - q12, 7) - Md5::F(q12, q11, q10) - new_q9 - Md5::K[12];
 
         // instantiate current step modification
         Modification m8 = Modification(8, new_x8);
@@ -97,9 +97,9 @@ std::vector<Solution> q4_solve(const Md5::Md5BlockHasher &h, Word searched_bits_
 
         // solve for x that caused by new q4 in q4 tunnel
         // use K[8] for q9
-        Word new_x3 = Md5::r_rotate(new_q4 - q3, 22) - Md5::F(q3, q2, q1) - q0 - Md5::K[3];
-        Word new_x4 = Md5::r_rotate(q5 - new_q4, 7) - Md5::F(new_q4, q3, q2) - q1 - Md5::K[4];
-        Word new_x7 = Md5::r_rotate(q8 - q7, 7) - Md5::F(q7, q6, q5) - new_q4 - Md5::K[7];
+        Word new_x3 = r_rotate(new_q4 - q3, 22) - Md5::F(q3, q2, q1) - q0 - Md5::K[3];
+        Word new_x4 = r_rotate(q5 - new_q4, 7) - Md5::F(new_q4, q3, q2) - q1 - Md5::K[4];
+        Word new_x7 = r_rotate(q8 - q7, 7) - Md5::F(q7, q6, q5) - new_q4 - Md5::K[7];
 
         // instantiate current step modification
         Modification m3 = Modification(3, new_x3);
@@ -126,8 +126,8 @@ Word solve_x_for_step(const Md5::Md5BlockHasher &h, const int step) {
     Word q0 = h.output_of(step - 1);
     Word q1 = h.output_of(step);
 
-    // Word new_x7 = Md5::r_rotate(q8 - q7, 7) - Md5::F(q7, q6, q5) - new_q4 - Md5::K[7];
-    Word new_x = Md5::r_rotate(q1 - q0, Md5::S[step]) - Md5::step_to_func_result(step, q0, q_1, q_2) - q_3 - Md5::K[step];
+    // Word new_x7 = r_rotate(q8 - q7, 7) - Md5::F(q7, q6, q5) - new_q4 - Md5::K[7];
+    Word new_x = r_rotate(q1 - q0, Md5::S[step]) - Md5::step_to_func_result(step, q0, q_1, q_2) - q_3 - Md5::K[step];
     return new_x;
 }
 

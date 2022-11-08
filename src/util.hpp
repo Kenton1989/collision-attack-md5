@@ -7,6 +7,14 @@
 
 #include "common.hpp"
 
+// rotate operations
+inline Word l_rotate(Word x, int shift) {
+    return x << shift | (x >> (sizeof(x) * 8 - shift));
+}
+inline Word r_rotate(Word x, int shift) {
+    return l_rotate(x, (sizeof(x) * 8 - shift));
+}
+
 inline void prt_h(Byte b) {
     printf("%02x", b);
 }
@@ -22,7 +30,7 @@ inline void prt_h(Word w) {
 inline void prt_h(const Words& words) {
     for (Word w : words) {
         prt_h(w);
-        printf(" ");
+        printf(", ");
     }
 }
 
@@ -67,5 +75,28 @@ inline Word rand_word() { return randint<Word>(); }
 inline Words rand_words(size_t sz) { return randvec<Word>(sz); }
 inline Byte rand_byte() { return randint<Byte>(); }
 inline Bytes rand_bytes(size_t sz) { return randvec<Byte>(sz); }
+
+// class used to facilitate iteration of sub-masks
+class SubmaskIter {
+   public:
+    SubmaskIter(Word super_mask, bool include0 = true) : _super_mask(super_mask) {
+        if (!include0) next();
+    }
+    void next() {
+        _end_on_0 = true;
+        _submask = _super_mask & ((_submask | ~_super_mask) + 1);
+    }
+    bool has_next() {
+        return _submask != 0 || !_end_on_0;
+    }
+    Word val() {
+        return _submask;
+    }
+
+   private:
+    bool _end_on_0 = false;
+    Word _super_mask;
+    Word _submask = 0;
+};
 
 #endif  // COLLISION_ATTACK_UTIL_HPP_
