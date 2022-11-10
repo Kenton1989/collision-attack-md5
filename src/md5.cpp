@@ -206,6 +206,15 @@ void Md5BlockHasher::set_full_output(int step, const Words &val) {
     _states[step + 2] = val[3];
 }
 
+Word Md5BlockHasher::epsilon(int step) const {
+    // epsilon = A + F(B, C, D) + M + K
+    Word a = _states[step];
+    Word b = _states[step + 3];
+    Word c = _states[step + 2];
+    Word d = _states[step + 1];
+    return a + step_to_func_result(step, b, c, d) + _message[Md5::msg_idx_of_step(step)] + Md5::K[step];
+}
+
 Words Md5BlockHasher::final_output() const {
     return Words({_iv[0] + output_of(step_of.a(16)),
                   _iv[1] + output_of(step_of.b(16)),

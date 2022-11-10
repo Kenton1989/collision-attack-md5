@@ -97,6 +97,11 @@ class Md5BlockHasher {
     // make sure all 64 steps are performed before calling this method
     Words final_output() const;
 
+    // calculate epsilon of step:
+    // epsilon = A + F(B, C, D) + M + K
+    // and output = B + (epsilon << S)
+    Word epsilon(int step) const;
+
    private:
     // store the IV
     Words _iv;
