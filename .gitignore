@@ -56,5 +56,8 @@ dkms.conf
 *.temp.*
 temp.*
 
+# stack dump
+*.stackdump
+
 # vscode
 .vscode*

@@ -14,6 +14,8 @@ std::pair<Words, Words> collision(const Words &iv = Md5::IV);
 void apply_simple_modification(Md5::Md5BlockHasher &hasher,
                                const PartialWord const_cond[], const PartialWord adj_cond[]);
 
+bool check_cond(Word src, Word adj_val, const PartialWord &const_cond, const PartialWord &adj_cond);
+
 // p = power, p2 = 2 to the power of
 constexpr inline Word p2(int power) {
     return 1u << power;
