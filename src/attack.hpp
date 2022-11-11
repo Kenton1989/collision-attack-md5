@@ -9,6 +9,15 @@
 
 namespace Attack {
 
+// return the bits of a and b under the mask is equal
+inline constexpr bool mask_eq(Word a, Word b, Word mask) {
+    return ((a ^ b) & mask) == 0;
+}
+// return the p-th bit of a and b is equal (bit are 0-index)
+inline constexpr bool bit_eq(Word a, Word b, int p) {
+    return mask_eq(a, b, 1u << p);
+}
+
 std::pair<Words, Words> collision(const Words &iv = Md5::IV);
 
 void apply_simple_modification(Md5::Md5BlockHasher &hasher,
@@ -147,6 +156,60 @@ constexpr PartialWord ADJ_COND_0[] = {
     PartialWord(32),                         // step 18 c5
     PartialWord(32)                          // step 19 b5
 };
+
+inline bool block_0_other_cond_ok(Md5::Md5BlockHasher &h) {
+    constexpr Md5::StepOf s = Md5::step_of;
+
+    auto oa = [&h](int i) { return h.output_of(Md5::step_of.a(i)); };
+    auto ob = [&h](int i) { return h.output_of(Md5::step_of.b(i)); };
+    auto oc = [&h](int i) { return h.output_of(Md5::step_of.c(i)); };
+    auto od = [&h](int i) { return h.output_of(Md5::step_of.d(i)); };
+    auto adj_eq = [&h](int step, int pos) {
+        return bit_eq(h.output_of(step), h.output_of(step - 1), pos);
+    };
+
+    Words out = h.final_output();
+    Word aa0 = out[0];
+    Word bb0 = out[1];
+    Word cc0 = out[2];
+    Word dd0 = out[3];
+
+    return
+        // a6,18=b5,18, d6,32=a6,32=b5,32, c6,32 = 0, b6,32 = c6,32 + 1, b12,32 = d12,32
+        adj_eq(s.a(6), 17) &&
+        adj_eq(s.a(6), 31) &&
+        adj_eq(s.d(6), 31) &&
+        bit_eq(oc(6), 0, 31) &&
+        !adj_eq(s.b(6), 31) &&
+        adj_eq(s.b(12), 31) &&
+        // eps23, 18=0, eps35, 16=0
+        bit_eq(h.epsilon(22), 0, 17) &&
+        bit_eq(h.epsilon(34), 0, 15) &&
+        // a13,32 = c12,32, d13,32 = b12,32+1, c13,32 = a13,32, b13,32 = d13,32
+        bit_eq(oa(13), oc(12), 31) &&
+        !bit_eq(od(13), ob(12), 31) &&
+        bit_eq(oc(13), oa(13), 31) &&
+        bit_eq(ob(13), od(13), 31) &&
+        // a14,32 = c13,32, d14,32 = b13,32, c14,32 = a14,32, b14,32 =d14,32
+        bit_eq(oa(14), oc(13), 31) &&
+        bit_eq(od(14), ob(13), 31) &&
+        bit_eq(oc(14), oa(14), 31) &&
+        bit_eq(ob(14), od(14), 31) &&
+        // a15,32 = c14,32 , d15,32 = b14,32 , c15,32 = a15,32, b15,32 = d15,32 + 1, b15,26 = 0,
+        bit_eq(oa(15), oc(14), 31) &&
+        bit_eq(od(15), ob(14), 31) &&
+        bit_eq(oc(15), oa(15), 31) &&
+        !bit_eq(ob(15), od(15), 31) &&
+        bit_eq(ob(15), 0, 25) &&
+        // a16,26 = 1, a16,32 = c15,32
+        bit_eq(oa(16), -1, 25) &&
+        bit_eq(oa(16), oc(15), 31) &&
+        // dd0,26 = 0, d16,26= 0, d16,32 = b15,32
+        // eps62,16~eps62,22 not all ones
+        // cc0,26 = 1, cc0,27 = 0, c16,26= 0, c16,32 = a16,32
+        // bb0,26 = 0, bb0,27 = 0, bb0,6 = 0, bb0,32 = cc0,32 = dd0,32
+        1;
+}
 
 constexpr PartialWord CONST_COND_1[] = {
     PartialWord(-6, -12, 22, -26, 27, -28,

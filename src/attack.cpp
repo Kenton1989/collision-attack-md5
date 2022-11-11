@@ -367,10 +367,6 @@ bool apply_complex_modification_blk_0(Md5::Md5BlockHasher &hasher) {
     return true;
 }
 
-// return the p-th bit of a and b is equal (bit are 0-index)
-inline bool bit_eq(Word a, Word b, int p) {
-    return ((a ^ b) & (Word(1) << p)) == 0;
-}
 //  complex modification for 2nd block
 bool apply_complex_modification_blk_1(Md5::Md5BlockHasher &hasher) {
     using Md5::step_of;
