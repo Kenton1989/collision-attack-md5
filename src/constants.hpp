@@ -87,17 +87,41 @@ inline Word step_to_func_result(const int step, const Word b, const Word c, cons
 }
 
 // a existing collision of M1
-const std::pair<Words, Words> M1_PAIR = std::make_pair(Words({
-                                                          0x130707da, 0x57a7434b, 0xc7292d01, 0xedf30e4e, 
-                                                          0x37ec9fec, 0x031ef80c, 0x577718d0, 0x48640e32, 
-                                                          0x05346d41, 0x80f3c1fc, 0x84c3002f, 0xd5a8a723, 
-                                                          0x773e8b07, 0xc6ac9bfc, 0x8f559f74, 0x4b7c81d5
+const std::pair<Words, Words> M0_PAIR = std::make_pair(Words({
+                                                           0x055a604a,
+                                                           0xa3461df0,
+                                                           0x12221694,
+                                                           0x6c449744,
+                                                           0x25c44d2c,
+                                                           0xa1b99a33,
+                                                           0x92681957,
+                                                           0x3c554e32,
+                                                           0x0632ed41,
+                                                           0x03f3f7fc,
+                                                           0x805eb737,
+                                                           0x1300af02,
+                                                           0xbefc06c7,
+                                                           0x0099e023,
+                                                           0xff80803f,
+                                                           0x0000bd93,
                                                        }),
                                                        Words({
-                                                           0x130707da, 0x57a7434b, 0xc7292d01, 0xedf30e4e, 
-                                                           0xb7ec9fec, 0x031ef80c, 0x577718d0, 0x48640e32, 
-                                                           0x05346d41, 0x80f3c1fc, 0x84c3002f, 0xd5a92723, 
-                                                           0x773e8b07, 0xc6ac9bfc, 0x0f559f74, 0x4b7c81d5
+                                                           0x055a604a,
+                                                           0xa3461df0,
+                                                           0x12221694,
+                                                           0x6c449744,
+                                                           0xa5c44d2c,
+                                                           0xa1b99a33,
+                                                           0x92681957,
+                                                           0x3c554e32,
+                                                           0x0632ed41,
+                                                           0x03f3f7fc,
+                                                           0x805eb737,
+                                                           0x13012f02,
+                                                           0xbefc06c7,
+                                                           0x0099e023,
+                                                           0x7f80803f,
+                                                           0x0000bd93,
                                                        }));
 }  // namespace Md5
 

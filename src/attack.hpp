@@ -181,7 +181,7 @@ inline bool block_0_other_cond_ok(Md5::Md5BlockHasher &h) {
         adj_eq(s.d(6), 31) &&
         bit_eq(oc(6), 0, 31) &&
         !adj_eq(s.b(6), 31) &&
-        adj_eq(s.b(12), 31) &&
+        bit_eq(ob(12), od(12), 31) &&
         // eps23, 18=0, eps35, 16=0
         bit_eq(h.epsilon(22), 0, 17) &&
         bit_eq(h.epsilon(34), 0, 15) &&
@@ -205,10 +205,24 @@ inline bool block_0_other_cond_ok(Md5::Md5BlockHasher &h) {
         bit_eq(oa(16), -1, 25) &&
         bit_eq(oa(16), oc(15), 31) &&
         // dd0,26 = 0, d16,26= 0, d16,32 = b15,32
+        bit_eq(dd0, 0, 25) &&
+        bit_eq(od(16), 0, 25) &&
+        bit_eq(od(16), ob(15), 31) &&
         // eps62,16~eps62,22 not all ones
+        !mask_eq(h.epsilon(61), -1, p2sum(15, 16, 17, 18, 19, 20, 21)) &&
         // cc0,26 = 1, cc0,27 = 0, c16,26= 0, c16,32 = a16,32
+        bit_eq(cc0, -1, 25) &&
+        bit_eq(cc0, 0, 26) &&
+        bit_eq(oc(16), 0, 25) &&
+        bit_eq(oc(16), oa(16), 31) &&
         // bb0,26 = 0, bb0,27 = 0, bb0,6 = 0, bb0,32 = cc0,32 = dd0,32
-        1;
+        bit_eq(bb0, 0, 25) &&
+        bit_eq(bb0, 0, 26) &&
+        bit_eq(bb0, 0, 5) &&
+        bit_eq(bb0, cc0, 31) &&
+        bit_eq(dd0, cc0, 31) &&
+        // dummy true
+        true;
 }
 
 constexpr PartialWord CONST_COND_1[] = {
@@ -252,12 +266,13 @@ constexpr PartialWord CONST_COND_1[] = {
                 /*epsilon extra*/ 24,
                 /*search extra*/ 21, 22, 23),  // step 13 d4
     PartialWord(-4, -16, 25, -26, 27, 28, 29, 30, 31,
-                /*epsilon extra*/ -17),             // step c4 14
-    PartialWord(4, /*epsilon extra*/ 16, 17, -29),  // step b4 15
-    PartialWord(-18),                               // step 16 a5
-    PartialWord(18),                                // step 17 d5
-    PartialWord(-18),                               // step 18 c5
-    PartialWord(),                                  // step 19 b5
+                /*epsilon extra*/ -17),  // step c4 14
+    PartialWord(4, /*epsilon extra*/ 16, 17, -29,
+                /* fastest fix */ 30),  // step b4 15
+    PartialWord(-18),                   // step 16 a5
+    PartialWord(18),                    // step 17 d5
+    PartialWord(-18),                   // step 18 c5
+    PartialWord(),                      // step 19 b5
 };
 
 constexpr PartialWord ADJ_COND_1[] = {
@@ -277,10 +292,11 @@ constexpr PartialWord ADJ_COND_1[] = {
     PartialWord(32),                                        // step 13 d4
     PartialWord(),                                          // step 14 c4
     PartialWord(32),                                        // step 15 b4
-    PartialWord(4, 16, 32),                                 // step 16 a5
-    PartialWord(30, 32),                                    // step 17 d5
-    PartialWord(32),                                        // step 18 c5
-    PartialWord(32),                                        // step 19 b5
+    PartialWord(4, 16, 32,
+                /* fastest fix */ -31),  // step 16 a5
+    PartialWord(30, 32),                 // step 17 d5
+    PartialWord(32),                     // step 18 c5
+    PartialWord(32),                     // step 19 b5
 };
 
 constexpr PartialWord BAD_EPS_1[] = {

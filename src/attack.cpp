@@ -90,15 +90,18 @@ std::pair<Words, Words> find_first_block(const Words &iv) {
 
     long long cnt = 0;
     long long success_cnt = 0;
-    Md5::Md5BlockHasher hasher0(iv, Md5::M1_PAIR.first);
-    Md5::Md5BlockHasher hasher1(iv, Md5::M1_PAIR.second);
-    hasher0.cal_all();
-    hasher1.cal_all();
-    if (assert_diff(hasher0.final_output(), hasher1.final_output(), H1_DIFF)) {
-        return Md5::M1_PAIR;
-    } else {
-        throw "something wrong";
-    }
+    Md5::Md5BlockHasher hasher0(iv, Md5::M0_PAIR.first);
+    Md5::Md5BlockHasher hasher1(iv, Md5::M0_PAIR.second);
+    // hasher0.cal_all();
+    // hasher1.cal_all();
+    // if (!assert_diff(hasher0.final_output(), hasher1.final_output(), H1_DIFF)) {
+    //     throw "something wrong";
+    // }
+    // if (!block_0_other_cond_ok(hasher0)) {
+    //     throw "something wrong";
+    // }
+    // return Md5::M0_PAIR;
+
     clock_t beg_clk = clock();
     while (true) {
         ++cnt;
@@ -115,9 +118,13 @@ std::pair<Words, Words> find_first_block(const Words &iv) {
         }
         ++success_cnt;
         const int OK_STEPS = 20;
+        hasher0.cal_range(OK_STEPS, Md5::LAST_STEP);
 
-        Words h1a = hasher0.cal_to_end(OK_STEPS);
+        if (!block_0_other_cond_ok(hasher0)) {
+            continue;
+        }
 
+        Words h1a = hasher0.final_output();
         hasher1.set_msg(add_diff(hasher0.get_msg(), M0_DIFF));
         Words h1b = hasher1.cal_all();
 
@@ -131,8 +138,8 @@ std::pair<Words, Words> find_first_block(const Words &iv) {
         //         printf("result mismatch at step %d of trial %ld\n", i, cnt);
         //         break;
         //     }
-        //     if (!check_cond(o0, hasher0.output_of(i-1), CONST_COND_0[i], ADJ_COND_0[i])) {
-        //         Word last = hasher0.output_of(i-1);
+        //     if (!check_cond(o0, hasher0.output_of(i - 1), CONST_COND_0[i], ADJ_COND_0[i])) {
+        //         Word last = hasher0.output_of(i - 1);
         //         prtln_h(o0);
         //         prtln_h(last);
         //         prtln_h(CONST_COND_0[i].mask);
@@ -160,7 +167,9 @@ std::pair<Words, Words> find_first_block(const Words &iv) {
         //         break;
         //     }
         // }
-        if (!assert_diff(h1a, h1b, H1_DIFF)) continue;
+        if (!assert_diff(h1a, h1b, H1_DIFF)) {
+            throw "some thing wrong";
+        }
 
         return std::make_pair(hasher0.get_msg(), hasher1.get_msg());
     }
@@ -179,71 +188,75 @@ std::pair<Words, Words> find_second_block(const Words &h1a, const Words &h1b) {
     clock_t beg_clk = clock();
     while (true) {
         ++cnt;
-        if (cnt % 10000000 == 0) {
+        if (cnt % 4000000 == 0) {
             std::cout << "searching " << cnt << "th candidate, "
                       << success_cnt << " success modification, "
                       << "spent " << double(clock() - beg_clk) / CLOCKS_PER_SEC << "s" << std::endl;
         }
         hasher0.set_msg(rand_words(Md5::BLOCK_WORDS));
         apply_simple_modification(hasher0, CONST_COND_1, ADJ_COND_1);
-        // bool success = apply_complex_modification_blk_1(hasher0);
-        // if (!success) {
-        //     continue;
-        // }
+        bool success = apply_complex_modification_blk_1(hasher0);
+        if (!success) {
+            continue;
+        }
         ++success_cnt;
-        const int OK_STEPS = 16;
+        const int OK_STEPS = 20;
 
         Words h2a = hasher0.cal_to_end(OK_STEPS);
 
         hasher1.set_msg(add_diff(hasher0.get_msg(), M1_DIFF));
         Words h2b = hasher1.cal_all();
 
-        for (int i = 0; i < OK_STEPS; ++i) {
-            Word o0 = hasher0.output_of(i);
-            Word o0true = hasher0.cal_step(i);
-            if (o0 != o0true) {
-                prtln_h(o0);
-                prtln_h(o0true);
-                printf("result mismatch at step %d of trial %ld\n", i, cnt);
-                throw "bad result";
-            }
-            if (!check_cond(o0, hasher0.output_of(i - 1), CONST_COND_1[i], ADJ_COND_1[i])) {
-                Word last = hasher0.output_of(i - 1);
-                prtln_h(o0);
-                prtln_h(last);
-                prtln_h(CONST_COND_1[i].mask);
-                prtln_h(CONST_COND_1[i].value);
-                prtln_h(ADJ_COND_1[i].mask);
-                prtln_h(ADJ_COND_1[i].value);
-                printf("condition not satisfied at step %d of trial %ld\n", i, cnt);
-                throw "bad result";
-            }
-            if (BAD_EPS_1[i].mask &&
-                (hasher0.epsilon(i) & BAD_EPS_1[i].mask) == BAD_EPS_1[i].value) {
-                prtln_h(hasher0.epsilon(i));
-                prtln_h(BAD_EPS_1[i].mask);
-                prtln_h(BAD_EPS_1[i].value);
-                printf("epsilon is bad at step %d of trial %ld\n", i, cnt);
-                throw "bad result";
-            }
-            Word o1 = hasher1.output_of(i);
-            Word diff = o1 - o0;
-            Word true_diff = OUTPUT_DIFF_1[i];
-            if (true_diff != diff) {
-                int msg_i = Md5::msg_idx_of_step(i);
-                printf("Msg index: %d\n", msg_i);
-                prtln_h(hasher0.get_msg()[msg_i]);
-                prtln_h(hasher1.get_msg()[msg_i]);
-                prtln_h(hasher0.full_input(i));
-                prtln_h(hasher1.full_input(i));
-                prtln_h(o0);
-                prtln_h(o1);
-                prtln_h(diff);
-                prtln_h(true_diff);
-                printf("diff not satisfied at step %d of trial %ld\n", i, cnt);
-                throw "bad result";
-            }
-        }
+        // for (int i = 0; i < OK_STEPS; ++i) {
+        //     Word o0 = hasher0.output_of(i);
+        //     Word o0true = hasher0.cal_step(i);
+        //     if (o0 != o0true) {
+        //         prtln_h(o0);
+        //         prtln_h(o0true);
+        //         printf("result mismatch at step %d of trial %ld\n", i, cnt);
+        //         break;
+        //         throw "bad result";
+        //     }
+        //     if (!check_cond(o0, hasher0.output_of(i - 1), CONST_COND_1[i], ADJ_COND_1[i])) {
+        //         Word last = hasher0.output_of(i - 1);
+        //         prtln_h(o0);
+        //         prtln_h(last);
+        //         prtln_h(CONST_COND_1[i].mask);
+        //         prtln_h(CONST_COND_1[i].value);
+        //         prtln_h(ADJ_COND_1[i].mask);
+        //         prtln_h(ADJ_COND_1[i].value);
+        //         printf("condition not satisfied at step %d of trial %ld\n", i, cnt);
+        //         break;
+        //         throw "bad result";
+        //     }
+        //     if (BAD_EPS_1[i].mask &&
+        //         (hasher0.epsilon(i) & BAD_EPS_1[i].mask) == BAD_EPS_1[i].value) {
+        //         prtln_h(hasher0.epsilon(i));
+        //         prtln_h(BAD_EPS_1[i].mask);
+        //         prtln_h(BAD_EPS_1[i].value);
+        //         printf("epsilon is bad at step %d of trial %ld\n", i, cnt);
+        //         break;
+        //         throw "bad result";
+        //     }
+        //     Word o1 = hasher1.output_of(i);
+        //     Word diff = o1 - o0;
+        //     Word true_diff = OUTPUT_DIFF_1[i];
+        //     if (true_diff != diff) {
+        //         int msg_i = Md5::msg_idx_of_step(i);
+        //         printf("Msg index: %d\n", msg_i);
+        //         prtln_h(hasher0.get_msg()[msg_i]);
+        //         prtln_h(hasher1.get_msg()[msg_i]);
+        //         prtln_h(hasher0.full_input(i));
+        //         prtln_h(hasher1.full_input(i));
+        //         prtln_h(o0);
+        //         prtln_h(o1);
+        //         prtln_h(diff);
+        //         prtln_h(true_diff);
+        //         printf("diff not satisfied at step %d of trial %ld\n", i, cnt);
+        //         break;
+        //         throw "bad result";
+        //     }
+        // }
         if (!assert_diff(h2a, h2b, H2_DIFF)) continue;
 
         return std::make_pair(hasher0.get_msg(), hasher1.get_msg());
@@ -408,41 +421,38 @@ bool apply_complex_modification_blk_1(Md5::Md5BlockHasher &hasher) {
             constexpr Word eps17_mask = p2sum(24, 25, 26);
             bool ok = false;
             Word old_d1 = d1, old_b4 = b4;
-            for (SubmaskIter d1it(p2sum(3, 4)); d1it.has_next(); d1it.next()) {
-                d1 = old_d1 ^ d1it.val();
-                hasher.set_output_of(d1step, d1);
-                hasher.set_msg_to_ensure_step(d1step);
-                Word m1 = hasher.get_msg()[1];
-                for (SubmaskIter b4it(p2sum(20, 21, 22, 23)); b4it.has_next(); b4it.next()) {
-                    b4 = old_b4 ^ b4it.val();
-                    Word eps17 = a4 + Md5::G(b4, c4, d4) + Md5::K[a5step] + m1;
-                    // all bits under the mask are 1
-                    if ((eps17_mask & eps17) == eps17_mask) {
-                        continue;
-                    }
-                    hasher.set_output_of(b4step, b4);
-                    a5 = b4 + l_rotate(eps17, Md5::S[a5step]);
-                    hasher.set_output_of(a5step, a5);
+            Word m1 = hasher.get_msg()[1];
+            for (SubmaskIter b4it(p2sum(20, 21, 22, 23, 30)); b4it.has_next(); b4it.next()) {
+                b4 = old_b4 ^ b4it.val();
+                Word eps17 = a4 + Md5::G(b4, c4, d4) + Md5::K[a5step] + m1;
+                // all bits under the mask are 1
+                if ((eps17_mask & eps17) == eps17_mask) {
+                    continue;
+                }
+                hasher.set_output_of(b4step, b4);
+                a5 = b4 + l_rotate(eps17, Md5::S[a5step]);
+                hasher.set_output_of(a5step, a5);
 
-                    if (!bit_eq(a5, b4, 31)) {
-                        continue;
-                    }
-                    ok = true;
-                    hasher.set_msg_to_ensure_step(b4step);
-                    break;
+                if (!bit_eq(a5, b4, 31)) {
+                    continue;
                 }
-                if (ok) {
-                    break;
+                if (bit_eq(a5, b4, 30)) {
+                    continue;
                 }
+                ok = true;
+                hasher.set_msg_to_ensure_step(b4step);
+                break;
             }
             if (!ok) {
+                // continue;
                 return false;
             }
             // second searching of step (d)
             ok = false;
             old_d1 = d1;
             for (SubmaskIter d1it(p2sum(10, 22, 24)); d1it.has_next(); d1it.next()) {
-                d1 = old_d1 ^ d1it.val();
+                Word mask = d1it.val();
+                d1 = old_d1 ^ mask;
                 hasher.set_output_of(d1step, d1);
                 hasher.set_msg_to_ensure_step(d1step);
                 Word m1 = hasher.get_msg()[1];
@@ -460,10 +470,11 @@ bool apply_complex_modification_blk_1(Md5::Md5BlockHasher &hasher) {
                 break;
             }
             if (!ok) {
+                continue;
                 return false;
             }
-            c1 = enforce_cond(c1, d1, CONST_COND_1[c1step], ADJ_COND_1[c1step]);
-            hasher.set_output_of(c1step, c1);
+            // c1 = enforce_cond(c1, d1, CONST_COND_1[c1step], ADJ_COND_1[c1step]);
+            // hasher.set_output_of(c1step, c1);
             hasher.set_msg_to_ensure_step(2);
             hasher.set_msg_to_ensure_step(3);
             hasher.set_msg_to_ensure_step(4);
@@ -520,6 +531,7 @@ bool apply_complex_modification_blk_1(Md5::Md5BlockHasher &hasher) {
                 break;
             }
             if (!good_c5) {
+                continue;
                 return false;
             }
             b3 = new_b3;

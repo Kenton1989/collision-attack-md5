@@ -40,9 +40,9 @@ inline void prtln_h(const T& v) {
     printf("\n");
 }
 
-// const long long RAND_SEED = time(0);
+const long long RAND_SEED = time(0);
 // const long long RAND_SEED = 114514;
-const long long RAND_SEED = 1919810;
+// const long long RAND_SEED = 1919810;
 
 inline std::mt19937_64& rand_engine() {
     static std::mt19937_64 e(RAND_SEED);
