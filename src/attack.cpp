@@ -2,7 +2,7 @@
 
 #include <cstdio>
 #include <ctime>
-#include <tuple>
+#include <iostream>
 
 #include "util.hpp"
 
@@ -46,6 +46,16 @@ inline Word cal_msg(int step, Word a0, Word a, Word b, Word c, Word d) {
     return r_rotate(a - b, Md5::S[step]) - a0 - Md5::step_to_func_result(step, b, c, d) - Md5::K[step];
 }
 
+// return the p-th bit of a and b is equal (bit are 0-index)
+inline bool bit_eq(Word a, Word b, int p) {
+    return ((a ^ b) & (Word(1) << p)) == 0;
+}
+
+// return if the bits of a and b under the mask is equal
+inline bool partial_eq(Word a, Word b, Word mask) {
+    return ((a ^ b) & mask) == 0;
+}
+
 std::pair<Words, Words> find_first_block(const Words &iv);
 std::pair<Words, Words> find_second_block(const Words &h1a, const Words &h1b);
 
@@ -58,7 +68,7 @@ std::pair<Words, Words> collision(const Words &iv) {
     tie(block0a, block0b) = find_first_block(iv);
     clock_t blk0_end_clk = clock();
     printf("found 1st block\n");
-    printf("used time: %.2fs\n", (blk0_end_clk - blk0_beg_clk) / double(CLOCKS_PER_SEC));
+    std::cout << "used time (s): " << (blk0_end_clk - blk0_beg_clk) / double(CLOCKS_PER_SEC) << std::endl;
     prtln_h(block0a);
     prtln_h(block0b);
 
@@ -73,7 +83,7 @@ std::pair<Words, Words> collision(const Words &iv) {
     tie(block1a, block1b) = find_second_block(h1a, h1b);
     clock_t blk1_end_clk = clock();
     printf("found 2nd block\n");
-    printf("used time: %.2fs\n", (blk1_end_clk - blk1_beg_clk) / double(CLOCKS_PER_SEC));
+    std::cout << "used time (s): " << (blk1_end_clk - blk1_beg_clk) / double(CLOCKS_PER_SEC) << std::endl;
     prtln_h(block1a);
     prtln_h(block1b);
 
@@ -102,9 +112,10 @@ std::pair<Words, Words> find_first_block(const Words &iv) {
     clock_t beg_clk = clock();
     while (true) {
         ++cnt;
-        if (cnt % 1000000 == 0) {
-            printf("searching %ldth candidate, %ld success modification at %.2lfs\n",
-                   cnt, success_cnt, double(clock() - beg_clk) / CLOCKS_PER_SEC);
+        if (cnt % 10000000 == 0) {
+            std::cout << "searching " << cnt << "th candidate, "
+                      << success_cnt << " success modification, "
+                      << "spent " << double(clock() - beg_clk) / CLOCKS_PER_SEC << "s" << std::endl;
         }
         hasher0.set_msg(rand_words(Md5::BLOCK_WORDS));
         apply_simple_modification(hasher0, CONST_COND_0, ADJ_COND_0);
@@ -166,7 +177,11 @@ std::pair<Words, Words> find_first_block(const Words &iv) {
 }
 
 bool apply_complex_modification_blk_1(Md5::Md5BlockHasher &hasher);
+
 std::pair<Words, Words> find_second_block(const Words &h1a, const Words &h1b) {
+    if (!assert_diff(h1a, h1b, H1_DIFF)) {
+        throw "bad input";
+    }
     long long cnt = 0;
     long long success_cnt = 0;
     Md5::Md5BlockHasher hasher0(h1a, rand_words(Md5::BLOCK_WORDS));
@@ -174,18 +189,19 @@ std::pair<Words, Words> find_second_block(const Words &h1a, const Words &h1b) {
     clock_t beg_clk = clock();
     while (true) {
         ++cnt;
-        if (cnt % 1000000 == 0) {
-            printf("searching %ldth candidate, %ld success modification at %.2lfs\n",
-                   cnt, success_cnt, double(clock() - beg_clk) / CLOCKS_PER_SEC);
+        if (cnt % 10000000 == 0) {
+            std::cout << "searching " << cnt << "th candidate, "
+                      << success_cnt << " success modification, "
+                      << "spent " << double(clock() - beg_clk) / CLOCKS_PER_SEC << "s" << std::endl;
         }
         hasher0.set_msg(rand_words(Md5::BLOCK_WORDS));
         apply_simple_modification(hasher0, CONST_COND_1, ADJ_COND_1);
-        bool success = apply_complex_modification_blk_1(hasher0);
-        if (!success) {
-            continue;
-        }
+        // bool success = apply_complex_modification_blk_1(hasher0);
+        // if (!success) {
+        //     continue;
+        // }
         ++success_cnt;
-        const int OK_STEPS = 20;
+        const int OK_STEPS = 16;
 
         Words h2a = hasher0.cal_to_end(OK_STEPS);
 
@@ -277,99 +293,111 @@ bool apply_complex_modification_blk_0(Md5::Md5BlockHasher &hasher) {
     Word c4 = hasher.output_of(step_of.c(4));
     Word b4 = hasher.output_of(step_of.b(4));
     Word a5, d5, c5, b5;
-    // step (c) of paper
-    {
-        constexpr int a5step = step_of.a(5);
-        a5 = enforce_cond(rand_word(), b4, CONST_COND_0[a5step], ADJ_COND_0[a5step]);
-        hasher.set_output_of(a5step, a5);
+    while (true) {
+        // step (c) of paper
+        {
+            constexpr int a5step = step_of.a(5);
+            a5 = enforce_cond(rand_word(), b4, CONST_COND_0[a5step], ADJ_COND_0[a5step]);
+            hasher.set_output_of(a5step, a5);
 
-        Word new_b4;
-        constexpr int d5step = step_of.d(5);
-        constexpr int d5msgi = Md5::msg_idx_of_step(d5step);
-        Word d5msg = hasher.get_msg()[d5msgi];
-        for (SubmaskIter it(p2sum(8, 20, 22)); it.has_next(); it.next()) {
-            Word mask = it.val();
-            new_b4 = b4 ^ mask;
-            d5 = Md5::perform_one_step(d5step, d5msg, d4, a5, new_b4, c4);
-            if (check_cond(d5, a5, CONST_COND_0[d5step], ADJ_COND_0[d5step]))
-                break;
-        }
-        constexpr int b4step = step_of.b(4);
-        b4 = new_b4;
-        hasher.set_output_of(b4step, new_b4);
-        hasher.set_output_of(d5step, d5);
-        hasher.set_msg_to_ensure_step(b4step);
-    }
-    // step (d) of paper
-    {
-        Word new_b3, new_m11, new_c5;
-        constexpr int c3step = step_of.b(3);
-        constexpr int b3step = step_of.b(3);
-        constexpr int c5step = step_of.c(5);
-        constexpr PartialWord c5const = CONST_COND_0[c5step];
-        constexpr Word eps19_mask = p2sum(3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17);
-        bool good_c5 = false;
-        for (SubmaskIter it(p2sum(3, 4, 5, 6, 20, 21, 22, 23)); it.has_next(); it.next()) {
-            Word mask = it.val();
-            new_b3 = b3 ^ mask;
-            new_m11 = cal_msg(b3step, b2, new_b3, c3, d3, a3);
-
-            Word eps19 = c4 + Md5::G(d5, a5, b4) + new_m11 + Md5::K[c5step];
-            // if all bits under the mask is 1
-            if ((eps19_mask & eps19) == eps19_mask) {
-                continue;
+            Word new_b4;
+            constexpr int d5step = step_of.d(5);
+            constexpr int d5msgi = Md5::msg_idx_of_step(d5step);
+            Word d5msg = hasher.get_msg()[d5msgi];
+            for (SubmaskIter it(p2sum(8, 20, 22)); it.has_next(); it.next()) {
+                Word mask = it.val();
+                new_b4 = b4 ^ mask;
+                d5 = Md5::perform_one_step(d5step, d5msg, d4, a5, new_b4, c4);
+                if (check_cond(d5, a5, CONST_COND_0[d5step], ADJ_COND_0[d5step]))
+                    break;
             }
+            constexpr int b4step = step_of.b(4);
+            b4 = new_b4;
+            hasher.set_output_of(b4step, new_b4);
+            hasher.set_output_of(d5step, d5);
+            hasher.set_msg_to_ensure_step(b4step);
+        }
+        // step (d) of paper
+        {
+            Word new_b3, new_m11, new_c5;
+            constexpr int c3step = step_of.b(3);
+            constexpr int b3step = step_of.b(3);
+            constexpr int c5step = step_of.c(5);
+            constexpr PartialWord c5const = CONST_COND_0[c5step];
+            constexpr Word eps19_mask = p2sum(3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17);
+            bool good_c5 = false;
+            for (SubmaskIter it(p2sum(3, 4, 5, 6, 20, 21, 22, 23)); it.has_next(); it.next()) {
+                Word mask = it.val();
+                new_b3 = b3 ^ mask;
+                new_m11 = cal_msg(b3step, b2, new_b3, c3, d3, a3);
 
-            new_c5 = d5 + l_rotate(eps19, Md5::S[c5step]);
-            if (!check_cond(new_c5, d5, c5const, ADJ_COND_0[c5step])) {
-                continue;
-            }
-            good_c5 = true;
-            break;
-        }
-        if (!good_c5) {
-            return false;
-        }
-        b3 = new_b3;
-        c5 = new_c5;
-        hasher.set_output_of(c5step, c5);
-        hasher.set_output_of(b3step, b3);
-        hasher.set_msg_to_ensure_step(b3step);
-        hasher.set_msg_to_ensure_step(b3step + 1);
-        hasher.set_msg_to_ensure_step(b3step + 2);
-        hasher.set_msg_to_ensure_step(b3step + 3);
-        hasher.set_msg_to_ensure_step(b3step + 4);
-    }
-    // step (e) of paper
-    {
-        constexpr Word eps20_mask = p2sum(29, 30, 31);
-        constexpr int b5step = step_of.b(5);
-        while (true) {
-            b5 = enforce_cond(rand_word(), c5, CONST_COND_0[b5step], ADJ_COND_0[b5step]);
-            Word new_m0 = cal_msg(b5step, b4, b5, c5, d5, a5);
-            Word eps20 = b4 + Md5::G(c5, d5, a5) + new_m0 + Md5::K[b5step];
-            // if bits under the mask is not all 0
-            if (eps20_mask & eps20) {
+                Word eps19 = c4 + Md5::G(d5, a5, b4) + new_m11 + Md5::K[c5step];
+                // if all bits under the mask is 1
+                if ((eps19_mask & eps19) == eps19_mask) {
+                    continue;
+                }
+
+                new_c5 = d5 + l_rotate(eps19, Md5::S[c5step]);
+                if (!check_cond(new_c5, d5, c5const, ADJ_COND_0[c5step])) {
+                    continue;
+                }
+                good_c5 = true;
                 break;
             }
+            if (!good_c5) {
+                return false;
+            }
+            b3 = new_b3;
+            c5 = new_c5;
+            hasher.set_output_of(c5step, c5);
+            hasher.set_output_of(b3step, b3);
+            hasher.set_msg_to_ensure_step(b3step);
+            hasher.set_msg_to_ensure_step(b3step + 1);
+            hasher.set_msg_to_ensure_step(b3step + 2);
+            hasher.set_msg_to_ensure_step(b3step + 3);
+            hasher.set_msg_to_ensure_step(b3step + 4);
         }
+        // step (e) of paper
+        {
+            constexpr Word eps20_mask = p2sum(29, 30, 31);
+            constexpr int b5step = step_of.b(5);
+            while (true) {
+                b5 = enforce_cond(rand_word(), c5, CONST_COND_0[b5step], ADJ_COND_0[b5step]);
+                Word new_m0 = cal_msg(b5step, b4, b5, c5, d5, a5);
+                Word eps20 = b4 + Md5::G(c5, d5, a5) + new_m0 + Md5::K[b5step];
+                // if bits under the mask is not all 0
+                if (eps20_mask & eps20) {
+                    break;
+                }
+            }
 
-        constexpr int a5step = step_of.a(5);
-        hasher.set_output_of(b5step, b5);
-        hasher.set_msg_to_ensure_step(a5step);
-        hasher.set_msg_to_ensure_step(b5step);
-        hasher.cal_range(0, 1);
-        hasher.set_msg_to_ensure_step(2);
-        hasher.set_msg_to_ensure_step(3);
-        hasher.set_msg_to_ensure_step(4);
-        hasher.set_msg_to_ensure_step(5);
+            constexpr int a5step = step_of.a(5);
+            hasher.set_output_of(b5step, b5);
+            hasher.set_msg_to_ensure_step(a5step);
+            hasher.set_msg_to_ensure_step(b5step);
+            hasher.cal_range(0, 1);
+            hasher.set_msg_to_ensure_step(2);
+            hasher.set_msg_to_ensure_step(3);
+            hasher.set_msg_to_ensure_step(4);
+            hasher.set_msg_to_ensure_step(5);
+        }
+        // step (f) of paper
+        {
+            hasher.cal_range(20, 63);
+
+            auto A = [&hasher](int i) { return hasher.output_of(step_of.a(i)); };
+            auto B = [&hasher](int i) { return hasher.output_of(step_of.b(i)); };
+            auto C = [&hasher](int i) { return hasher.output_of(step_of.c(i)); };
+            auto D = [&hasher](int i) { return hasher.output_of(step_of.d(i)); };
+
+            if (!(bit_eq(A(6), B(5), 17)
+                  // A(6),18=B(5),18, D(6),32=A(6),32 = B(5),32, C(6),32 = 0, B(6),32 = C(6),32 + 1, B(12),32 = D(12),32
+                  )) {
+                continue;
+            }
+        }
+        return true;
     }
-    return true;
-}
-
-// return the p-th bit of a and b is equal (bit are 0-index)
-inline bool bit_eq(Word a, Word b, int p) {
-    return ((a ^ b) & (Word(1) << p)) == 0;
 }
 //  complex modification for 2nd block
 bool apply_complex_modification_blk_1(Md5::Md5BlockHasher &hasher) {
@@ -430,7 +458,9 @@ bool apply_complex_modification_blk_1(Md5::Md5BlockHasher &hasher) {
                     hasher.set_msg_to_ensure_step(b4step);
                     break;
                 }
-                if (ok) break;
+                if (ok) {
+                    break;
+                }
             }
             if (!ok) {
                 return false;
@@ -485,6 +515,9 @@ bool apply_complex_modification_blk_1(Md5::Md5BlockHasher &hasher) {
                 hasher.set_msg_to_ensure_step(c2step + 3);
                 hasher.set_msg_to_ensure_step(c2step + 4);
                 d5 = hasher.cal_step(d5step);
+                if (!(bit_eq(d5, -1, 17) & bit_eq(d5, a5, 31))) {
+                    continue;
+                }
             }
         }
         // step (f) of paper
@@ -537,7 +570,7 @@ bool apply_complex_modification_blk_1(Md5::Md5BlockHasher &hasher) {
                 continue;
             }
             b5 = hasher.cal_step(b5step);
-            if (!bit_eq(b5, c5, 31)) {
+            if (!check_cond(b5, c5, CONST_COND_1[b5step], ADJ_COND_1[b5step])) {
                 continue;
             }
         }

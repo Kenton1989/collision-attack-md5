@@ -116,7 +116,7 @@ constexpr PartialWord CONST_COND_0[] = {
     PartialWord(-18 /*epsilon extra*/, 31),      // step 16 a5
     PartialWord(18),                             // step 17 d5
     PartialWord(-18),                            // step 18 c5
-    PartialWord()                                // step 19 b5
+    PartialWord(),                               // step 19 b5
 };
 
 constexpr PartialWord ADJ_COND_0[] = {

@@ -44,8 +44,8 @@ inline void prtln_h(const T& v) {
 // const long long RAND_SEED = 114514;
 const long long RAND_SEED = 1919810;
 
-inline std::default_random_engine& rand_engine() {
-    static std::default_random_engine e(RAND_SEED);
+inline std::mt19937_64& rand_engine() {
+    static std::mt19937_64 e(RAND_SEED);
     return e;
 }
 
@@ -75,6 +75,20 @@ inline Word rand_word() { return randint<Word>(); }
 inline Words rand_words(size_t sz) { return randvec<Word>(sz); }
 inline Byte rand_byte() { return randint<Byte>(); }
 inline Bytes rand_bytes(size_t sz) { return randvec<Byte>(sz); }
+
+inline void prtln_cond(const PartialWord& const_c, const PartialWord& adj_c) {
+    char out[] = "........ ........ ........ ........\n";
+    for (Word mask = 1 << 31, i = 0; i < 32; mask >>= 1, ++i) {
+        int offset = i / 8;
+        if (const_c.mask & mask) {
+            out[i + offset] = (const_c.value & mask) ? '1' : '0';
+        }
+        if (adj_c.mask & mask) {
+            out[i + offset] = (adj_c.value & mask) ? '^' : 'A';
+        }
+    }
+    printf(out);
+}
 
 // class used to facilitate iteration of sub-masks
 class SubmaskIter {

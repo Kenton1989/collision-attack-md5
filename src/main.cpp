@@ -13,6 +13,18 @@ int main() {
     printf("%s\n", s);
     prtln_h(hash);
 
+    // printf("block 1 suff condi:\n");
+    // for (int i = 0; i < 20; ++i) {
+    //     printf("%2d ", i + 1);
+    //     prtln_cond(Attack::CONST_COND_0[i], Attack::ADJ_COND_0[i]);
+    // }
+
+    // printf("block 2 suff condi:\n");
+    // for (int i = 0; i < 20; ++i) {
+    //     printf("%2d ", i + 1);
+    //     prtln_cond(Attack::CONST_COND_1[i], Attack::ADJ_COND_1[i]);
+    // }
+
     // Words msg = rand_words(16);
     // evaluate_q4(msg);
     // evaluate_q9(msg);
