@@ -1,9 +1,12 @@
-from random import randbytes
+from random import randrange
 import sys
 
 
 def main():
-    b = randbytes(512)
+    print(len(pre))
+    return
+
+    b = bytes([randrange(256) for i in range(128)])
     if len(sys.argv) > 1:
         title = sys.argv[1]
     else:
@@ -22,18 +25,18 @@ pre = b'''<!DOCTYPE html>
 <html lang="en">
 
 <head>
+  <!--padding-->
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MD5 Attack</title>
+  <title>MD5 Attack Sample</title>
 </head>
 
 <body>
   <main>
     <h1>MD5 Collision Attack</h1>
     <p>This file has a unique background color.</p>
-    <pre id="seed" hidden>
-'''
+    <pre id="seed" hidden>'''
 post = b'''
 </pre>
   </main>

@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <iostream>
 
 #include "attack.hpp"
 #include "md5.hpp"
@@ -12,6 +13,28 @@ int main() {
     Md5::Bytes hash = Md5::hash_string(s);
     printf("%s\n", s);
     prtln_h(hash);
+
+    // std::string str;
+    // const auto CIN_EOF = decltype(std::cin)::traits_type::eof();
+    // while (true) {
+    //     char ch = std::cin.get();
+    //     if (ch == CIN_EOF) {
+    //         break;
+    //     }
+    //     str.push_back(ch);
+    // }
+    // if (str.size() % 64 != 0) {
+    //     throw "bad input";
+    // }
+    // Words input = Md5::encode_words(Md5::encode_bytes(str));
+    // Words iv = Md5::IV;
+    // for (size_t i = 0; i < input.size(); i += 16) {
+    //     Words blk(input.begin() + i, input.begin() + i + 16);
+    //     Md5::Md5BlockHasher h(iv, blk);
+    //     iv = h.cal_all();
+    // }
+    // prtln_h(iv);
+    // return 0;
 
     // printf("block 1 suff condi:\n");
     // for (int i = 0; i < 20; ++i) {
@@ -51,8 +74,10 @@ int main() {
     // printf("c5: %d\n", Attack::check_cond(c5, d5, Attack::CONST_COND_0[18],Attack::ADJ_COND_0[18]));
     // printf("b5: %d\n", Attack::check_cond(b5, c5, Attack::CONST_COND_0[19],Attack::ADJ_COND_0[19]));
 
-    auto [m0, m1] = Attack::collision();
+    Words special_iv = {0xb9c93963, 0x48775557, 0xd2f539f7, 0x377aa9cc};
+    auto [m0, m1] = Attack::collision(special_iv);
     prtln_h(m0);
+    prtln_h(m1);
 
     return 0;
 }

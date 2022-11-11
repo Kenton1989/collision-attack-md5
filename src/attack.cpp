@@ -52,7 +52,8 @@ std::pair<Words, Words> find_second_block(const Words &h1a, const Words &h1b);
 std::pair<Words, Words> collision(const Words &iv) {
     using std::tie;
     Words block0a, block0b, h1a, h1b, block1a, block1b;
-
+    printf("IV: ");
+    prtln_h(iv);
     printf("searching 1st block\n");
     clock_t blk0_beg_clk = clock();
     tie(block0a, block0b) = find_first_block(iv);
