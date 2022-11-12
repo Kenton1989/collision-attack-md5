@@ -56,17 +56,17 @@ void hash_input_without_padding() {
 
 void perform_md5_attack() {
     printf("seed: %ld\n", RAND_SEED);
-    Words special_iv = {0xb9c93963, 0x48775557, 0xd2f539f7, 0x377aa9cc};
-    // special_iv = Md5::IV;
+    Words iv = Md5::IV;
+    iv = {0xb9c93963, 0x48775557, 0xd2f539f7, 0x377aa9cc};
     Words m0, m1;
-    std::tie(m0, m1) = Attack::collision(special_iv);
+    std::tie(m0, m1) = Attack::collision(iv);
     prtln_h(m0);
     prtln_h(m1);
 }
 
 void output_sample_file() {
     using namespace std;
-    
+
     Words m0 = {
         0x0f06cc1f, 0xb80d3846, 0xd5e06941, 0x544cf76f, 
         0x9f420444, 0xe6f86c03, 0xd9a385d5, 0x940f7ab5,
@@ -102,7 +102,10 @@ void output_sample_file() {
 
     Bytes h0 = Md5::hash_string(s0);
     Bytes h1 = Md5::hash_string(s1);
+    prtln_h(b0);
     prtln_h(h0);
+
+    prtln_h(b1);
     prtln_h(h1);
 
     fstream o0("m0.bin", ios::binary | ios::out);

@@ -19,8 +19,13 @@ inline void prt_h(Byte b) {
     printf("%02x", b);
 }
 inline void prt_h(const Bytes& bytes) {
+    size_t i = 0;
     for (Byte b : bytes) {
         prt_h(b);
+        ++i;
+        if (i && i % 4 == 0) {
+            printf(" ");
+        }
     }
 }
 

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <!--padding-->
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MD5 Attack Sample</title>
+</head>
+
+<body>
+  <main>
+    <h1>MD5 Collision Attack</h1>
+    <p>This file has a unique background color.</p>
+    <pre id="seed" hidden>`“ù&ºÏã2?˚5õvtl!Ë<˙∞—i•µ|2ö"¡,4¸˝S[ªlÇ’V“◊ß…Ïıãy‹2e3ıçˆ‘Ôû%_Û/çÔB÷ıoºÑó»$sˇgÏ-oïRû˝∞Â7ª±π~æJé–ó®èÙ¨~Ω¥o4l∑+Å÷ˇ¡~]ÕÁi
+</pre>
+  </main>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    main {
+      padding: 20px;
+      margin: auto;
+      background-color: white;
+      width: 60%;
+      height: 400px;
+    }
+
+    body {
+      margin: auto;
+      background-color: blue;
+      height: 100vh;
+    }
+  </style>
+  <script>
+    function toHex(d) {
+      return ("0" + (Number(d).toString(16))).slice(-2).toUpperCase()
+    }
+    function sfc32(a, b, c, d) {
+      return function() {
+        a >>>= 0; b >>>= 0; c >>>= 0; d >>>= 0; 
+        var t = (a + b) | 0;
+        a = b ^ b >>> 9;
+        b = c + (c << 3) | 0;
+        c = (c << 21 | c >>> 11);
+        d = d + 1 | 0;
+        t = t + d | 0;
+        c = c + t | 0;
+        return (t >>> 0) / 4294967296;
+      }
+    }
+
+    let seedPre = document.getElementById("seed");
+    let s = seedPre.innerHTML;
+    let c20 = s.charCodeAt(20);
+    let c24 = s.charCodeAt(24);
+    let rand = sfc32(c20, c24, c20, c24);
+    let r = rand()%256;
+    let g = rand()%256;
+    let b = rand()%256;
+
+    let rgb = `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+
+    console.log('bg rgb', rgb);
+    document.body.style.backgroundColor = rgb;
+  </script>
+</body>
+
+</html>
