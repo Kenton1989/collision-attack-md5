@@ -119,6 +119,82 @@ std::vector<Solution> q4_solve(const Md5::Md5BlockHasher &h, Word searched_bits_
     return solutions;
 }
 
+// q15 and q16 have relevant bits 0
+inline std::vector<Solution> q14_solve(const Md5::Md5BlockHasher &h, Word searched_bits_mask) {
+    Word q_1 = h.output_of(-2);
+    Word q0 = h.output_of(-1);
+    Word q1 = h.output_of(0);
+    Word q2 = h.output_of(1);
+    Word q3 = h.output_of(2);
+    Word q4 = h.output_of(3);
+    Word q5 = h.output_of(4);
+    Word q6 = h.output_of(5);
+    Word q7 = h.output_of(6);
+    Word q8 = h.output_of(7);
+    Word q10 = h.output_of(9);
+    Word q11 = h.output_of(10);
+    Word q12 = h.output_of(11);
+    Word q13 = h.output_of(12);
+    Word q14 = h.output_of(13);
+    Word q15 = h.output_of(14);
+    Word q16 = h.output_of(15);
+    Word q17 = h.output_of(16);
+    Word q18 = h.output_of(17);
+
+    std::vector<Solution> solutions = std::vector<Solution>();
+
+    // q15 = q16 = 0 on relevant bits
+    Word searched_bits = searched_bits_mask & ~q15 & ~q16;
+
+    Word inv_searched = ~searched_bits;
+    /**
+     * this piece of code uses a bit of trick, that
+     * it sets bits that are not in search bits so that they can take carry to next search bit toward MSB.
+     */
+    for (Word changed_bits = (inv_searched + 1) & searched_bits;            // a mask with only the lsb search bit as 1
+         changed_bits != 0;                                                 // if this is 0, it loops a cycle actually and equal original message already
+         changed_bits = (changed_bits + inv_searched + 1) & searched_bits)  // update to next searching pattern
+    {
+        // update temp q14 to next valid value
+        Word new_q14 = q14 ^ changed_bits;
+
+        // use perform_one_step for simplicity, though hardcoded
+        // use K[8] for q9
+        Word new_x13 = r_rotate(new_q14 - q13, 12) - Md5::F(q13, q12, q11) - q10 - Md5::K[13];
+        Word new_x14 = r_rotate(q15 - new_q14, 17) - Md5::F(new_q14, q13, q12) - q11 - Md5::K[14];
+        // eq. to x[17]
+        Word new_x6 = r_rotate(q18 - q17, 9) - Md5::G(q17, q16, q15) - new_q14 - Md5::K[17];
+
+        // since q5 and x5 unchanged, back-solve q4 and q3: since x5 , q5, q6 unchanged, F(5,4,3) must keep unchanged
+        // then if q5i=1 change q4 else q3
+        Word new_q4 = q5 ^ q4;
+        Word new_q3 = ~q5 ^ q3;
+        // after get new q4 and q3, back solve msg block 2,3,4,7
+        Word new_x2 = r_rotate(new_q3 - q2, 17) - Md5::F(q2, q1, q0) - q_1 - Md5::K[2];
+        Word new_x3 = r_rotate(new_q4 - new_q3, 22) - Md5::F(new_q3, q2, q1) - q0 - Md5::K[3];
+        Word new_x4 = r_rotate(q5 - new_q4, 7) - Md5::F(new_q4, new_q3, q2) - q1 - Md5::K[4];
+        Word new_x7 = r_rotate(q8 - q7, 22) - Md5::F(q7, q6, q5) - new_q4 - Md5::K[7];
+
+        // instantiate current step modification
+        Modification m2 = Modification(2, new_x2);
+        Modification m3 = Modification(3, new_x3);
+        Modification m4 = Modification(4, new_x4);
+        Modification m6 = Modification(4, new_x6);
+        Modification m7 = Modification(4, new_x7);
+        Modification m13 = Modification(4, new_x13);
+        Modification m14 = Modification(4, new_x14);
+
+        std::vector<Modification> mods = std::vector<Modification>{m2, m3, m4, m6, m7, m13, m14};
+
+        // pov is hardcoded to 24 for q9 tunnel: all accessed message block
+        // doesn't appear before q25
+        Solution cur_s = Solution(24, mods);
+        solutions.push_back(cur_s);
+    }
+
+    return solutions;
+}
+
 Word solve_x_for_step(const Md5::Md5BlockHasher &h, const int step) {
     Word q_3 = h.output_of(step - 4);
     Word q_2 = h.output_of(step - 3);

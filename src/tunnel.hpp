@@ -39,6 +39,9 @@ std::vector<Solution> q9_solve(const Md5::Md5BlockHasher &h, Word searched_bits_
 // searched_bits_mask & ~(q5 ^ 0) & ~(q6 ^ -1)
 std::vector<Solution> q4_solve(const Md5::Md5BlockHasher &h, Word searched_bits_mask);
 
+// q14 dynamic tunnel
+std::vector<Solution> q14_solve(const Md5::Md5BlockHasher &h, Word searched_bits_mask);
+
 void verify_q4_tunnel(Md5::Md5BlockHasher &verify_h,
                       const Words specified_states,
                       const Words new_q4);
@@ -46,6 +49,10 @@ void verify_q4_tunnel(Md5::Md5BlockHasher &verify_h,
 void verify_q9_tunnel(Md5::Md5BlockHasher &verify_h,
                       const Words specified_states,
                       const Words new_q9);
+
+void verify_q14_tunnel(Md5::Md5BlockHasher &verify_h,
+                       const Words specified_states,
+                       const Words new_q14);
 
 inline std::vector<Solution> dummy_solver(const Md5::Md5BlockHasher &h, Word searched_bits_mask) {
     Solution dummy1(0, {Modification(0, 0)});
