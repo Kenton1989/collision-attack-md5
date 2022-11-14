@@ -51,8 +51,7 @@ void verify_q9_tunnel(Md5::Md5BlockHasher &verify_h,
                       const Words new_q9);
 
 void verify_q14_tunnel(Md5::Md5BlockHasher &verify_h,
-                       const Words specified_states,
-                       const Words new_q14);
+                       const Words specified_states);
 
 inline std::vector<Solution> dummy_solver(const Md5::Md5BlockHasher &h, Word searched_bits_mask) {
     Solution dummy1(0, {Modification(0, 0)});
