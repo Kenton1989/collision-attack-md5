@@ -106,10 +106,12 @@ constexpr PartialWord CONST_COND_0[] = {
                 -27, 28, 29, 30, 31, 32),  // step 8 a3
     PartialWord(-1, -2, 7, -8, -9, 13, -14, 16,
                 17, 18, 19, 20, 21, -24, 31, -32,
-                /*epsilon extra*/ 29, 30),  // step 9 d3
+                /*epsilon extra*/ 29, 30,
+                /*tunnel extra*/ -22, -23),  // step 9 d3
     PartialWord(-1, 2, 7, 8, -9, -13, -14, 16,
                 17, -18, -19, -20, -31, -32,
-                /*epsilon extra*/ -29, 30),  // step 10 c3
+                /*epsilon extra*/ -29, 30,
+                /*tunnel extra*/ 22, 23, 24),  // step 10 c3
     PartialWord(-8, 9, 13, -14, -15, -16, -17,
                 -18, 20, -19, -31, -32,
                 /*epsilon extra*/ -30),  // step 11 b3

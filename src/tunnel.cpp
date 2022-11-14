@@ -38,7 +38,7 @@ inline std::vector<Solution> q9_solve(const Md5::Md5BlockHasher &h, Word searche
      * this piece of code uses a bit of trick, that
      * it sets bits that are not in search bits so that they can take carry to next search bit toward MSB.
      */
-    for (SubmaskIter it(searched_bits); it.has_next(); it.next()) {
+    for (SubmaskIter it(searched_bits, false); it.has_next(); it.next()) {
         Word new_q9 = q9 ^ it.val();
 
         // solve for x that caused by new q9 in q9 tunnel
