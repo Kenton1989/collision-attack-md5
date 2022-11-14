@@ -184,6 +184,7 @@ int main() {
     // Words msg = rand_words(16);
     // evaluate_q4(msg);
     // evaluate_q9(msg);
+    // evaluate_q14(msg);
 
     perform_md5_attack();
 
