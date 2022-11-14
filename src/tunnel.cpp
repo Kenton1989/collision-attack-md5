@@ -43,9 +43,9 @@ inline std::vector<Solution> q9_solve(const Md5::Md5BlockHasher &h, Word searche
 
         // solve for x that caused by new q9 in q9 tunnel
         // use K[8] for q9
-        Word new_x8 = r_rotate(new_q9 - q8, 7) - Md5::F(q8, q7, q6) - q5 - Md5::K[8];
-        Word new_x9 = r_rotate(q10 - new_q9, 12) - Md5::F(new_q9, q8, q7) - q6 - Md5::K[9];
-        Word new_x12 = r_rotate(q13 - q12, 7) - Md5::F(q12, q11, q10) - new_q9 - Md5::K[12];
+        Word new_x8 = r_rotate(new_q9 - q8, Md5::S[8]) - Md5::F(q8, q7, q6) - q5 - Md5::K[8];
+        Word new_x9 = r_rotate(q10 - new_q9, Md5::S[9]) - Md5::F(new_q9, q8, q7) - q6 - Md5::K[9];
+        Word new_x12 = r_rotate(q13 - q12, Md5::S[12]) - Md5::F(q12, q11, q10) - new_q9 - Md5::K[12];
 
         // instantiate current step modification
         Modification m8 = Modification(8, new_x8);
@@ -450,6 +450,16 @@ void verify_q14_tunnel(Md5::Md5BlockHasher &verify_h,
     std::cout << "----------------------------------------------------------------------\n";
     std::cout << ">>> Verifying q14 tunnel with speficied q15 and q16:\n";
     std::cout << "----------------------------------------------------------------------\n";
+
+    // for debug
+    Words new_outputs;
+    Words old_outpus;
+    auto old_msg = verify_h.get_msg();
+    const int validate_to_step = 25;
+    for (int counter = 0; counter < validate_to_step; ++counter) {
+        old_outpus.push_back(verify_h.output_of(counter));
+    }
+
     if (specified_states.size() != 4) throw("in verify q14 tunnel: length of specified state != 4");
     Word q11 = verify_h.output_of(10);
     Word q12 = verify_h.output_of(11);
@@ -467,6 +477,10 @@ void verify_q14_tunnel(Md5::Md5BlockHasher &verify_h,
     Word q5 = verify_h.output_of(4);
     Word q3 = (specified_q3 & q5) ^ old_q3;
     Word q4 = (specified_q4 & ~q5) ^ old_q4;
+    Word old_q6 = verify_h.output_of(5);
+    Word old_q7 = verify_h.output_of(6);
+    Word old_q8 = verify_h.output_of(7);
+    Word old_q18 = verify_h.output_of(17);
 
     Word q15 = specified_states[2];
     Word q16 = specified_states[3];
@@ -475,8 +489,7 @@ void verify_q14_tunnel(Md5::Md5BlockHasher &verify_h,
 
     Word search_bit_constraint = ~q15 & ~q16;
 
-    Word x15;
-    Word x16;
+    Word x5 = verify_h.get_msg()[5];
     Word cur_x13;
     Word cur_x14;
     Word cur_x6;
@@ -487,52 +500,88 @@ void verify_q14_tunnel(Md5::Md5BlockHasher &verify_h,
     std::cout << "stated q15: " << q15 << "\n";
     std::cout << "stated q16: " << q16 << "\n";
 
+    // enter input states for hasher
     verify_h.set_output_of(2, q3);
     verify_h.set_output_of(3, q4);
-    verify_h.set_output_of(15, q15);
-    verify_h.set_output_of(16, q16);
+    verify_h.set_output_of(14, q15);
+    verify_h.set_output_of(15, q16);
 
+    // compute x that should be changed to produce specified q3 and q4
     Word x2 = solve_x_for_step(verify_h, 2);
     Word x3 = solve_x_for_step(verify_h, 3);
     Word x4 = solve_x_for_step(verify_h, 4);
+    Word new_x5 = solve_x_for_step(verify_h, 5);
+    Word old_x6 = verify_h.get_msg()[6];
     Word x6 = solve_x_for_step(verify_h, 6);
     Word x7 = solve_x_for_step(verify_h, 7);
+
+    // set these solutions to msg positions of hasher
     verify_h.set_msg_word(2, x2);
     verify_h.set_msg_word(3, x3);
     verify_h.set_msg_word(4, x4);
     verify_h.set_msg_word(6, x6);
     verify_h.set_msg_word(7, x7);
 
+    // update states based on these new solutions for verification
+    verify_h.cal_range(3, 8);
+
+    // verification
+    Word new_q5 = verify_h.output_of(4);
+    Word new_q6 = verify_h.output_of(5);
+    Word new_q7 = verify_h.output_of(6);
+    Word new_q8 = verify_h.output_of(7);
+
+    std::cout << "integrity check on x5: new x5: " << new_x5 << " old x5: " << x5 << "\n";
+    std::cout << "new q5: " << new_q5 << " old q5: " << q5 << "\n";
+    std::cout << "new q6: " << new_q6 << " old q6: " << old_q6 << "\n";
+    std::cout << "new q7: " << new_q7 << " old q7: " << old_q7 << "\n";
+    std::cout << "new q8: " << new_q8 << " old q7: " << old_q8 << "\n";
+
+    if (new_x5 != x5) {
+        throw "new x5 neq to old x5";
+    }
+
     std::cout << "For specified q3 and q4, to keep q5, x5 unchanged, msg has following modification:\n";
     std::cout << "x2 to " << x2 << "\nx3 to " << x3 << "\nx4 to " << x4 << "\nx6 to " << x6 << "\nx7 to " << x7 << "\n";
 
-    // set static yet changed message words by q15 and q16
-    verify_h.set_msg_word(15, x15);
-    verify_h.set_msg_word(16, x16);
+    std::cout << "at this point, q18 = " << verify_h.output_of(17) << "\n";
+    // solve q14 based on new x6
+    Word default_q14 = r_rotate(q18 - q17, Md5::S[17]) - Md5::step_to_func_result(17, q17, q16, q15) - x6 - Md5::K[17];
+    verify_h.set_output_of(13, default_q14);
 
-    Word default_q14 = r_rotate(q18 - q17, 9) - Md5::step_to_func_result(17, q17, q16, q15) - x6 - Md5::K[17];
+    std::cout << "perform q18 step to check manually: " << Md5::perform_one_step(17, x6, q17, q16, q15, default_q14) << " and old q18: "
+              << old_q18 << "\n";
+    std::cout << "perform old q18 step to match old q18: " << Md5::perform_one_step(17, old_x6, q17, q16, q15, old_q14) << "\n";
+
+    // for specified q15 and q16 modify x15 and x1
+    // notice that x1 appears before , though we don't care for status before q3 so just hash from q3
+    Word x15 = solve_x_for_step(verify_h, 15);
+    Word x1 = solve_x_for_step(verify_h, 16);
+    verify_h.set_msg_word(1, x1);
+    verify_h.set_msg_word(15, x15);
 
     // need to compare old q24 to verify 32nd bit suff cond for q24
-    verify_h.cal_range(1, 24);
+    // skip x1 for inconsistency, just to verify this tunnel
     Word old_q24 = verify_h.output_of(23);
     Word old_q23 = verify_h.output_of(22);
 
     std::cout << "For specified q15 and q16, x15 and x16 have the following modification:\n";
     std::cout << "x15 to: " << x15 << " ,\n";
-    std::cout << "x16 to: " << x16 << " \n";
+    std::cout << "x1 to: " << x1 << " \n";
     std::cout << "computed q17 from q16, q15, old q14, q13, x16 == x0 " << q17 << "\n";
     std::cout << "the following evaluation states that as long as q15 and q16 satisfies condition, q17 is independent from";
     std::cout << " corresponding bit in q14.\n";
     std::cout << "q14 is set to " << default_q14 << " based on x6 condition.\n";
+    std::cout << "verify that q18 does not change for both x6 and q14: \n";
+    std::cout << "old q18: " << old_q18 << " , new q18: " << verify_h.output_of(17) << "\n";
 
-    std::cout << ">>> verifying current q14:" << default_q14 << "\n";
+    std::cout << ">>> verifying current q14: " << default_q14 << "\n";
     Word q14_changed = default_q14 ^ old_q14;
     if (q14_changed & ~search_bit_constraint != 0) {
         std::cout << "q14 computed from x6: " << default_q14 << " violates tunnel constraint on q15 and q16, thus return\n";
         return;
     }
 
-    verify_h.set_output_of(13, default_q14);
     cur_x13 = solve_x_for_step(verify_h, 13);
     cur_x14 = solve_x_for_step(verify_h, 14);
     // x6 equivalent to x17
@@ -542,12 +591,17 @@ void verify_q14_tunnel(Md5::Md5BlockHasher &verify_h,
     verify_h.set_msg_word(13, cur_x13);
     verify_h.set_msg_word(14, cur_x14);
     verify_h.set_msg_word(17, cur_x6);
+
+    // all q and x are set, thus hashing
+    verify_h.cal_range(13, 24);
     std::cout << "to generate this new q14 from old q14 " << old_q14 << ", solution for x13 is: " << cur_x13 << "\n";
     std::cout << "to keep q18 unchanged, solution for x17 == x6 is: " << cur_x6 << "\n";
     std::cout << "q15 = q14 + RL17(F(14,13,12) + q11 + x14 + K[14])\n";
     std::cout << "    = " << default_q14 << " + RL17( " << Md5::step_to_func_result(14, default_q14, q13, q12) << " + "
               << q11 << " + " << cur_x14 << " + " << Md5::K[14] << ")\n";
     std::cout << "    = " << verify_h.cal_step(14) << "       (q15 specified = " << q15 << ")\n";
+
+    // std::cout << "DEBUG: perform q15 manually " << Md5::perform_one_step(14, cur_x14, default_q14, q13, q12, q11) << "\n\n";
 
     Word cur_q15 = verify_h.output_of(14);
     std::cout << "q16 = q15 + RL22(F(15,14,13) + q12 + x15 + K[15])\n";
@@ -558,7 +612,7 @@ void verify_q14_tunnel(Md5::Md5BlockHasher &verify_h,
     Word cur_q16 = verify_h.output_of(15);
     std::cout << "q17 = q16 + RL5(F(16,15,14) + q13 + x16 + K[16])\n";
     std::cout << "    = " << cur_q16 << " + RL5( " << Md5::step_to_func_result(16, cur_q16, cur_q15, default_q14) << " + "
-              << q13 << " + " << x16 << " + " << Md5::K[16] << ")\n";
+              << q13 << " + " << x1 << " + " << Md5::K[16] << ")\n";
     std::cout << "    = " << verify_h.cal_step(16) << "       (q17 calculated = " << q17 << ")\n";
 
     Word cur_q17 = verify_h.output_of(16);
@@ -568,23 +622,37 @@ void verify_q14_tunnel(Md5::Md5BlockHasher &verify_h,
         throw "q17 verification fails, something goes wrong";
     }
 
-    // since modification on x4 may violate 32th bit suff cond for q24,
-    // need to further verify q24
-    verify_h.cal_range(1, 24);
-    Word cur_q23 = verify_h.output_of(22);
-    Word cur_q24 = verify_h.output_of(23);
+    // // since modification on x4 may violate 32th bit suff cond for q24,
+    // // need to further verify q24
+    // verify_h.cal_range(10, 24);
+    // Word cur_q23 = verify_h.output_of(22);
+    // Word cur_q24 = verify_h.output_of(23);
 
-    if (cur_q23 == old_q23) {
-        std::cout << "new q23 is the same as old q23 and both have value " << cur_q23 << "\n";
-    } else {
-        std::cout << "cur q23 " << cur_q23 << " is different from old q23 " << old_q23 << "\n";
-    }
+    // if (cur_q23 == old_q23) {
+    //     std::cout << "new q23 is the same as old q23 and both have value " << cur_q23 << "\n";
+    // } else {
+    //     std::cout << "cur q23 " << cur_q23 << " is different from old q23 " << old_q23 << "\n";
+    // }
 
-    if ((cur_q24 >> 31) == 1) {
-        std::cout << "Lucky! new q24 has 32th bit = 1, satisfying suff cond and have value " << cur_q24 << ";\n";
-    } else {
-        std::cout << "Opps unlucky, current q24 " << cur_q24 << " violate suff condition =1 on bit 32\n";
-    }
+    // if ((cur_q24 >> 31) == 1) {
+    //     std::cout << "Lucky! new q24 has 32th bit = 1, satisfying suff cond and have value " << cur_q24 << ";\n";
+    // } else {
+    //     std::cout << "Opps unlucky, current q24 " << cur_q24 << " violate suff condition =1 on bit 32\n";
+    // }
+
+    // for (int counter = 0; counter < validate_to_step; ++counter) {
+    //     new_outputs.push_back(verify_h.output_of(counter));
+    // }
+
+    // for (int counter = 0; counter < validate_to_step; ++counter) {
+    //     std::cout << "counter = " << counter << ", old output: " << old_outpus[counter] << ", new output: " << new_outputs[counter] << "\n";
+    // }
+
+    // auto new_msg = verify_h.get_msg();
+    // for (int counter = 0; counter < 16; ++counter) {
+    //     std::cout << "counter = " << counter << ", old msg: " << old_msg[counter] << ", new msg: " << new_msg[counter] << "\n";
+    // }
+
     return;
 }
 
