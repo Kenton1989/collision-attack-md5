@@ -93,9 +93,9 @@ std::vector<Solution> q4_solve(const Md5::Md5BlockHasher &h, Word searched_bits_
 
         // solve for x that caused by new q4 in q4 tunnel
         // use K[8] for q9
-        Word new_x3 = r_rotate(new_q4 - q3, 22) - Md5::F(q3, q2, q1) - q0 - Md5::K[3];
-        Word new_x4 = r_rotate(q5 - new_q4, 7) - Md5::F(new_q4, q3, q2) - q1 - Md5::K[4];
-        Word new_x7 = r_rotate(q8 - q7, 7) - Md5::F(q7, q6, q5) - new_q4 - Md5::K[7];
+        Word new_x3 = r_rotate(new_q4 - q3, Md5::S[3]) - Md5::F(q3, q2, q1) - q0 - Md5::K[3];
+        Word new_x4 = r_rotate(q5 - new_q4, Md5::S[4]) - Md5::F(new_q4, q3, q2) - q1 - Md5::K[4];
+        Word new_x7 = r_rotate(q8 - q7, Md5::S[7]) - Md5::F(q7, q6, q5) - new_q4 - Md5::K[7];
 
         // instantiate current step modification
         Modification m3 = Modification(3, new_x3);
