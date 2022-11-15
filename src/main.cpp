@@ -175,18 +175,18 @@ void output_sample_file() {
 }
 
 int main() {
-    md5_quick_example();
+    // md5_quick_example();
 
     // print_sufficient_conditions();
 
     // hash_input_without_padding();
 
-    // Words msg = rand_words(16);
-    // evaluate_q4(msg);
-    // evaluate_q9(msg);
-    // evaluate_q14(msg);
+    Words msg = rand_words(16);
+    evaluate_q4(msg);
+    evaluate_q9(msg);
+    evaluate_q14(msg);
 
-    perform_md5_attack();
+    // perform_md5_attack();
 
     // output_sample_file();
 

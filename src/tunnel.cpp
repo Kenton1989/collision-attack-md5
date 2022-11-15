@@ -455,7 +455,7 @@ void verify_q14_tunnel(Md5::Md5BlockHasher &verify_h,
     Words new_outputs;
     Words old_outpus;
     auto old_msg = verify_h.get_msg();
-    const int validate_to_step = 25;
+    const int validate_to_step = 18;
     for (int counter = 0; counter < validate_to_step; ++counter) {
         old_outpus.push_back(verify_h.output_of(counter));
     }
@@ -549,9 +549,9 @@ void verify_q14_tunnel(Md5::Md5BlockHasher &verify_h,
     Word default_q14 = r_rotate(q18 - q17, Md5::S[17]) - Md5::step_to_func_result(17, q17, q16, q15) - x6 - Md5::K[17];
     verify_h.set_output_of(13, default_q14);
 
-    std::cout << "perform q18 step to check manually: " << Md5::perform_one_step(17, x6, q17, q16, q15, default_q14) << " and old q18: "
-              << old_q18 << "\n";
-    std::cout << "perform old q18 step to match old q18: " << Md5::perform_one_step(17, old_x6, q17, q16, q15, old_q14) << "\n";
+    // std::cout << "perform q18 step to check manually: " << Md5::perform_one_step(17, x6, q17, q16, q15, default_q14) << " and old q18: "
+    //           << old_q18 << "\n";
+    // std::cout << "perform old q18 step to match old q18: " << Md5::perform_one_step(17, old_x6, q17, q16, q15, old_q14) << "\n";
 
     // for specified q15 and q16 modify x15 and x1
     // notice that x1 appears before , though we don't care for status before q3 so just hash from q3
@@ -640,13 +640,13 @@ void verify_q14_tunnel(Md5::Md5BlockHasher &verify_h,
     //     std::cout << "Opps unlucky, current q24 " << cur_q24 << " violate suff condition =1 on bit 32\n";
     // }
 
-    // for (int counter = 0; counter < validate_to_step; ++counter) {
-    //     new_outputs.push_back(verify_h.output_of(counter));
-    // }
+    for (int counter = 0; counter < validate_to_step; ++counter) {
+        new_outputs.push_back(verify_h.output_of(counter));
+    }
 
-    // for (int counter = 0; counter < validate_to_step; ++counter) {
-    //     std::cout << "counter = " << counter << ", old output: " << old_outpus[counter] << ", new output: " << new_outputs[counter] << "\n";
-    // }
+    for (int counter = 0; counter < validate_to_step; ++counter) {
+        std::cout << "counter = " << counter << ", old output: " << old_outpus[counter] << ", new output: " << new_outputs[counter] << "\n";
+    }
 
     // auto new_msg = verify_h.get_msg();
     // for (int counter = 0; counter < 16; ++counter) {
