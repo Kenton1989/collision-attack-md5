@@ -9,5 +9,12 @@ gcc -o main *.c
 ```
 The commands above can be combined in one line:
 
+### CMake >= 3.12
+Under project directory:
+``` 
+cmake .
+make
+```
+
 ## Acknowledgement
 Thanks Bryce Wilson for his implementation of MD5: https://github.com/Zunawe/md5-c .
